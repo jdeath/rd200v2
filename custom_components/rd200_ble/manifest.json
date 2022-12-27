@@ -2,7 +2,7 @@
   "domain": "rd200_ble",
   "name": "RD200 BLE",
   "config_flow": true,
-  "documentation": "https://www.github.com/jdeath/rd200_ble",
+  "documentation": "https://www.github.com/jdeath/rd200v2",
   "dependencies": ["bluetooth"],
   "codeowners": ["@jdeath"],
   "iot_class": "local_polling",
