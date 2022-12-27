@@ -77,10 +77,8 @@ class RD200BluetoothDeviceData:
         self, client: BleakClient, device: RD200Device
     ) -> RD200Device:
         
-        self._event = asyncio.Event()
-        
+        self._event = asyncio.Event()        
         await client.write_gatt_char(RADON_CHARACTERISTIC_UUID_WRITE, WRITE_VALUE)
-        
         await client.start_notify(RADON_CHARACTERISTIC_UUID_READ, self.notification_handler)
         
         # Wait for up to one second to see if a
@@ -102,13 +100,42 @@ class RD200BluetoothDeviceData:
         await client.stop_notify(RADON_CHARACTERISTIC_UUID_READ)  
 
         return device
+    
+    async def _get_radon_peak(
+        self, client: BleakClient, device: RD200Device
+    ) -> RD200Device:
+        
+        self._event = asyncio.Event()        
+        await client.write_gatt_char(RADON_CHARACTERISTIC_UUID_WRITE, b"\x40")
+        await client.start_notify(RADON_CHARACTERISTIC_UUID_READ, self.notification_handler)
+        
+        # Wait for up to one second to see if a
+        # callback comes in.
+        
+        try:
+            await asyncio.wait_for(self._event.wait(), 5)
+        except asyncio.TimeoutError:
+            self.logger.warn("Timeout getting command data.")
+            
+        if self._command_data is not None:
+            RadonValueBQ = struct.unpack('<H',self._command_data[51:53])[0]
+            device.sensors["radon_peak"] = float(RadonValueBQ)
+            if not self.is_metric:
+                device.sensors["radon_peak"] = (
+                                float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER
+                            )
+            
+        await client.stop_notify(RADON_CHARACTERISTIC_UUID_READ)  
 
+        return device
+        
     async def update_device(self, ble_device: BLEDevice) -> RD200Device:
         """Connects to the device through BLE and retrieves relevant data"""
         
         device = RD200Device()
         client = await establish_connection(BleakClient, ble_device, ble_device.address)
         device = await self._get_radon(client, device)
+        device = await self._get_radon_peak(client, device)
         await client.disconnect()
 
         return device

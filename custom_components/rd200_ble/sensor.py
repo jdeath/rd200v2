@@ -43,10 +43,10 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:radioactive",
     ),
-    "radon_longterm_avg": SensorEntityDescription(
-        key="radon_longterm_avg",
+    "radon_peak": SensorEntityDescription(
+        key="radon_peak",
         native_unit_of_measurement=VOLUME_BECQUEREL,
-        name="Radon longterm average",
+        name="Radon Peak",
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:radioactive",
     ),
