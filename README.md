@@ -15,3 +15,6 @@ A python script is posted for people to help find important fields.
 | `Average Day Radon` | `??` | `??` | ?? | ?? | ?? |
 | `Average Month Radon` | `??` | `??` | ?? | ?? | ?? |
 | `Peak Radon` | `0x40` | `data[51:53]` | little endian ushort | Bq/m<sup>3<sup> | No Yet |
+| `Serial` | `0x40` | `data[8:11] + data[2:8] + data[11:15]` | chars |  | No |  
+| `Model` | `0x40` | `data[16:21]` | chars |  | No |  
+  
