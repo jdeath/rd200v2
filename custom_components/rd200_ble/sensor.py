@@ -52,12 +52,16 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     ),
     "radon_1day_level": SensorEntityDescription(
         key="radon_1day_level",
-        name="Radon 1-day level",
+        native_unit_of_measurement=VOLUME_BECQUEREL,
+        name="Radon 1-day Level",
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:radioactive",
     ),
     "radon_1month_level": SensorEntityDescription(
         key="radon_1month_level",
-        name="Radon 1-month level",
+        native_unit_of_measurement=VOLUME_BECQUEREL,
+        name="Radon 1-month Level",
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:radioactive",
     ),
     "temperature": SensorEntityDescription(
