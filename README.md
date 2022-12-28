@@ -13,7 +13,7 @@ A python script is posted for people to help find important fields.
 | - | - | - | - | - | - |
 | `Current Radon` | `0x50` | `data[2:4]` | little endian ushort | Bq/m<sup>3</sup> | Yes |
 | `Average Day Radon` | `0x50` | `data[4:6]` | little endian ushort | Bq/m<sup>3</sup> | Yes |
-| `Average Month Radon` | `0x50` | `data[4:6]`??  | little endian ushort | Bq/m<sup>3</sup> | Yes |
+| `Average Month Radon` | `0x50` | `data[6:8]`??  | little endian ushort | Bq/m<sup>3</sup> | Yes |
 | `Peak Radon` | `0x40` | `data[51:53]` | little endian ushort | Bq/m<sup>3<sup> | Yes |
 | `Serial` | `0x40` | `data[8:11] + data[2:8] + data[11:15]` | chars |  | No |  
 | `Model` | `0x40` | `data[16:21]` | chars |  | No |  
