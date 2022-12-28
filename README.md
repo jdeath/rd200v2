@@ -12,7 +12,7 @@ A python script is posted for people to help find important fields.
 | Reading | Write Value | Data Location | Data Format | Unit | Added in Integration |
 | - | - | - | - | - | - |
 | `Current Radon` | `0x50` | `data[2:4]` | little endian ushort | Bq/m<sup>3</sup> | Yes |
-| `Average Day Radon` | `??` | `??` | ?? | ?? | ?? |
+| `Average Day Radon` | `0x50` | `data[4:6]` | ?? | ?? | No |
 | `Average Month Radon` | `??` | `??` | ?? | ?? | ?? |
 | `Peak Radon` | `0x40` | `data[51:53]` | little endian ushort | Bq/m<sup>3<sup> | Yes |
 | `Serial` | `0x40` | `data[8:11] + data[2:8] + data[11:15]` | chars |  | No |  
