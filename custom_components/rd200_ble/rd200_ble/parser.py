@@ -96,6 +96,18 @@ class RD200BluetoothDeviceData:
                 device.sensors["radon"] = (
                                 float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER
                             )
+            RadonValueBQ = struct.unpack('<H',self._command_data[4:6])[0]
+            device.sensors["radon_1day_level"] = float(RadonValueBQ)
+            if not self.is_metric:
+                device.sensors["radon_1day_level"] = (
+                                float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER
+                            )
+            RadonValueBQ = struct.unpack('<H',self._command_data[6:8])[0]
+            device.sensors["radon_1month_level"] = float(RadonValueBQ)
+            if not self.is_metric:
+                device.sensors["radon_1month_level"] = (
+                                float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER
+                            )
             
         await client.stop_notify(RADON_CHARACTERISTIC_UUID_READ)  
 

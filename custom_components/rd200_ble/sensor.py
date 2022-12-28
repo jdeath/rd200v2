@@ -55,9 +55,9 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
         name="Radon 1-day level",
         icon="mdi:radioactive",
     ),
-    "radon_longterm_level": SensorEntityDescription(
-        key="radon_longterm_level",
-        name="Radon longterm level",
+    "radon_1month_level": SensorEntityDescription(
+        key="radon_1month_level",
+        name="Radon 1-month level",
         icon="mdi:radioactive",
     ),
     "temperature": SensorEntityDescription(
@@ -148,7 +148,7 @@ class RD200Sensor(
                     rd200_device.address,
                 )
             },
-            name="RD200 " + str(rd200_device.address),
+            name=name,
             manufacturer="Ecosense",
             model="RD200 V2",
             hw_version=rd200_device.hw_version,
