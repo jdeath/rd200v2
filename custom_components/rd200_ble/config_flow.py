@@ -66,6 +66,9 @@ class RD200ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             data = await rd200.update_device(ble_device)
+            data.name = discovery_info.advertisement.local_name
+            data.address = discovery_info.address
+            data.indentifer = discovery_info.advertisement.local_name
         except BleakError as err:
             _LOGGER.error(
                 "Error connecting to and getting data from %s: %s",
@@ -146,7 +149,7 @@ class RD200ConfigFlow(ConfigFlow, domain=DOMAIN):
             if discovery_info.advertisement.local_name is None:
                 continue
                 
-            if not (discovery_info.advertisement.local_name.startswith("FR:RU") or (discovery_info.advertisement.local_name.startswith("FR:RU")):
+            if not (discovery_info.advertisement.local_name.startswith("FR:RU") or discovery_info.advertisement.local_name.startswith("FR:RU")):
                 continue
             
             _LOGGER.debug("Found My Device")
