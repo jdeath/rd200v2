@@ -146,7 +146,7 @@ class RD200ConfigFlow(ConfigFlow, domain=DOMAIN):
             if discovery_info.advertisement.local_name is None:
                 continue
                 
-            if not discovery_info.advertisement.local_name.startswith("FR:RU"):
+            if not (discovery_info.advertisement.local_name.startswith("FR:RU") or (discovery_info.advertisement.local_name.startswith("FR:RU")):
                 continue
             
             _LOGGER.debug("Found My Device")
