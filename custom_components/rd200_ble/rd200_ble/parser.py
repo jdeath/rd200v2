@@ -148,6 +148,6 @@ class RD200BluetoothDeviceData:
         client = await establish_connection(BleakClient, ble_device, ble_device.address)
         device = await self._get_radon(client, device)
         device = await self._get_radon_peak(client, device)
-        await client.disconnect()
+        client.disconnect()
 
         return device
