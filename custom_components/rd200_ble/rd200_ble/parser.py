@@ -95,7 +95,7 @@ class RD200BluetoothDeviceData:
         await client.stop_notify(RADON_CHARACTERISTIC_UUID_READ)  
         _LOGGER.debug("3")
         _LOGGER.debug(self._command_data)
-        if self._command_data is not None:
+        if self._command_data is not None and len(self._command_data) == 12:
             RadonValueBQ = struct.unpack('<H',self._command_data[2:4])[0]
             device.sensors["radon"] = float(RadonValueBQ)
             if not self.is_metric:
@@ -114,8 +114,8 @@ class RD200BluetoothDeviceData:
                 device.sensors["radon_1month_level"] = (
                                 float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER
                             )
-            self._command_data = None    
-        
+               
+        self._command_data = None 
         _LOGGER.debug("4")
         return device
     
@@ -143,14 +143,14 @@ class RD200BluetoothDeviceData:
         
         _LOGGER.debug("7")
         _LOGGER.debug(self._command_data)
-        if self._command_data is not None:
+        if self._command_data is not None and len(self._command_data) == 68:
             RadonValueBQ = struct.unpack('<H',self._command_data[51:53])[0]
             device.sensors["radon_peak"] = float(RadonValueBQ)
             if not self.is_metric:
                 device.sensors["radon_peak"] = (
                                 float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER
                             ) 
-            self._command_data = None
+        self._command_data = None
         _LOGGER.debug("8")
         return device
         
