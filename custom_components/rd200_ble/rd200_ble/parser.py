@@ -77,6 +77,7 @@ class RD200BluetoothDeviceData:
         self, client: BleakClient, device: RD200Device
     ) -> RD200Device:
         
+        _LOGGER.debug("0") 
         self._event = asyncio.Event()
         await client.start_notify(RADON_CHARACTERISTIC_UUID_READ, self.notification_handler)
         await client.write_gatt_char(RADON_CHARACTERISTIC_UUID_WRITE, WRITE_VALUE)
@@ -84,14 +85,16 @@ class RD200BluetoothDeviceData:
         
         # Wait for up to one second to see if a
         # callback comes in.
+        _LOGGER.debug("1") 
         
         try:
             await asyncio.wait_for(self._event.wait(), 5)
         except asyncio.TimeoutError:
             self.logger.warn("Timeout getting command data.")
-        
+        _LOGGER.debug("2") 
         await client.stop_notify(RADON_CHARACTERISTIC_UUID_READ)  
-        
+        _LOGGER.debug("3")
+        _LOGGER.debug(self._command_data)
         if self._command_data is not None:
             RadonValueBQ = struct.unpack('<H',self._command_data[2:4])[0]
             device.sensors["radon"] = float(RadonValueBQ)
@@ -113,12 +116,14 @@ class RD200BluetoothDeviceData:
                             )
             self._command_data = None    
         
+        _LOGGER.debug("4")
         return device
     
     async def _get_radon_peak(
         self, client: BleakClient, device: RD200Device
     ) -> RD200Device:
         
+        _LOGGER.debug("5")
         self._event = asyncio.Event()        
         await client.start_notify(RADON_CHARACTERISTIC_UUID_READ, self.notification_handler)
         await client.write_gatt_char(RADON_CHARACTERISTIC_UUID_WRITE, b"\x40")
@@ -126,14 +131,18 @@ class RD200BluetoothDeviceData:
         
         # Wait for up to one second to see if a
         # callback comes in.
+        _LOGGER.debug("5.5")
         
         try:
             await asyncio.wait_for(self._event.wait(), 5)
         except asyncio.TimeoutError:
             self.logger.warn("Timeout getting command data.")
         
+        _LOGGER.debug("6")
         await client.stop_notify(RADON_CHARACTERISTIC_UUID_READ) 
         
+        _LOGGER.debug("7")
+        _LOGGER.debug(self._command_data)
         if self._command_data is not None:
             RadonValueBQ = struct.unpack('<H',self._command_data[51:53])[0]
             device.sensors["radon_peak"] = float(RadonValueBQ)
@@ -142,7 +151,7 @@ class RD200BluetoothDeviceData:
                                 float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER
                             ) 
             self._command_data = None
-        
+        _LOGGER.debug("8")
         return device
         
     async def update_device(self, ble_device: BLEDevice) -> RD200Device:
@@ -152,6 +161,8 @@ class RD200BluetoothDeviceData:
         device = RD200Device()
         device = await self._get_radon(client, device)
         device = await self._get_radon_peak(client, device)
+        _LOGGER.debug("Try to disconnect")
         await client.disconnect()
-
+        _LOGGER.debug("disconnect")
+        
         return device
