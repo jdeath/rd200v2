@@ -114,7 +114,11 @@ class RD200BluetoothDeviceData:
                 device.sensors["radon_1month_level"] = (
                                 float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER
                             )
-               
+        else:
+            device.sensors["radon"] = None
+            device.sensors["radon_1day_level"] = None
+            device.sensors["radon_1month_level"] = None
+            
         self._command_data = None 
         _LOGGER.debug("4")
         return device
@@ -150,6 +154,9 @@ class RD200BluetoothDeviceData:
                 device.sensors["radon_peak"] = (
                                 float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER
                             ) 
+        else:
+            device.sensors["radon_peak"] = None
+            
         self._command_data = None
         _LOGGER.debug("8")
         return device
