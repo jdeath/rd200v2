@@ -162,4 +162,7 @@ class RD200Sensor(
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.coordinator.data.sensors[self.entity_description.key]
+        try:
+            return self.coordinator.data.sensors[self.entity_description.key]
+        except KeyError:
+            return None
