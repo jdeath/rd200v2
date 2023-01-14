@@ -5,6 +5,8 @@ Based on: https://github.com/EtoTen/radonreader/ and the AirThings BLE Homeassis
 
 Only works for RD200 Version 2 units with serial numbers starting with either FR:RU (United States) , FR:RE (Spain) , FR:GI (???)
 
+If you are pretty sure it is a version 2 device, but has a differnet serial number prefix, edit the manifest.json and line 152 in config_flow.py to include you prefix. If it works, post an issue or a PR and I can add it in.
+
 I may add Version 1 at a later date, I think can just switch off the serial number, change the UUIDs, and change the parsing code. Feel free to submit a PR to add v1 capability. 
 
 A python script is posted for people to help find important fields.
