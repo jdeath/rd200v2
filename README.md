@@ -3,11 +3,13 @@ RadonEye RD200 Version 2 Integration for Homeasssistant
 
 Based on: https://github.com/EtoTen/radonreader/ and the AirThings BLE Homeassistant Integration (https://github.com/home-assistant/core/tree/dev/homeassistant/components/airthings_ble) and https://github.com/vincegio/airthings-ble
 
-Only works for RD200 Version 2 units with serial number starting with FR:RU (United States) and FR:RE (Spain)
+Only works for RD200 Version 2 units with serial numbers starting with either FR:RU (United States) , FR:RE (Spain) , FR:GI (???)
 
 I may add Version 1 at a later date, I think can just switch off the serial number, change the UUIDs, and change the parsing code. Feel free to submit a PR to add v1 capability. 
 
 A python script is posted for people to help find important fields.
+
+Retrieving the radon peak value is not stable. Usually works on first reboot of homeassistant, but many people have problems after that. Not sure why, the device just does not return the data correctly.
 
 | Reading | Write Value | Data Location | Data Format | Unit | Added in Integration |
 | - | - | - | - | - | - |
