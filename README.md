@@ -11,7 +11,7 @@ I may add Version 1 at a later date, I think can just switch off the serial numb
 
 A python script is posted for people to help find important fields.
 
-Retrieving the radon peak value is not stable. Usually works on first reboot of homeassistant, but many people have problems after that. Not sure why, the device just does not return the data correctly.
+Note for ESPHome BT Proxy: Retrieving the radon peak value is not stable. Usually works on first reboot of homeassistant, but many people have problems after that. Not sure why, the device just does not return the data correctly. USB Adapters do not have this problem. This is because the data is in a 68 byte long array and something is keeping ESPHome from returning more than 20 bytes.
 
 | Reading | Write Value | Data Location | Data Format | Unit | Added in Integration |
 | - | - | - | - | - | - |
