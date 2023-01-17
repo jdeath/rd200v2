@@ -33,9 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ble_device = bluetooth.async_ble_device_from_address(hass, address)
 
     if not ble_device:
-        raise ConfigEntryNotReady(
-            f"Could not find RD200 device with address {address}"
-        )
+        raise ConfigEntryNotReady(f"Could not find RD200 device with address {address}")
 
     async def _async_update_method():
         """Get data from RD200 BLE."""

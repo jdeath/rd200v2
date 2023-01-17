@@ -35,7 +35,8 @@ class Discovery:
 
 def get_name(device: RD200Device) -> str:
     """Generate name with identifier for device."""
-    return f"{device.name} ({device.identifier})"
+
+    return f"{device.name}"
 
 
 class RD200DeviceUpdateError(Exception):
@@ -69,8 +70,8 @@ class RD200ConfigFlow(ConfigFlow, domain=DOMAIN):
             data.name = discovery_info.advertisement.local_name
             data.address = discovery_info.address
             data.indentifer = discovery_info.advertisement.local_name
-            data.hw_version="Version 2",
-            data.sw_version="V 2.0.2",
+            data.hw_version = ("Version 2",)
+            data.sw_version = ("V 2.0.2",)
         except BleakError as err:
             _LOGGER.error(
                 "Error connecting to and getting data from %s: %s",
@@ -144,16 +145,20 @@ class RD200ConfigFlow(ConfigFlow, domain=DOMAIN):
             address = discovery_info.address
             if address in current_addresses or address in self._discovered_devices:
                 continue
-                        
+
             ##
-            
-            
+
             if discovery_info.advertisement.local_name is None:
                 continue
-                
-            if not (discovery_info.advertisement.local_name.startswith("FR:RU") or discovery_info.advertisement.local_name.startswith("FR:RE") or discovery_info.advertisement.local_name.startswith("FR:GI")):
+
+            if not (
+                discovery_info.advertisement.local_name.startswith("FR:RU")
+                or discovery_info.advertisement.local_name.startswith("FR:RE")
+                or discovery_info.advertisement.local_name.startswith("FR:GI")
+                or discovery_info.advertisement.local_name.startswith("FR:R2")
+            ):
                 continue
-            
+
             _LOGGER.debug("Found My Device")
             _LOGGER.debug("RD2000 Discovery address: %s", address)
             _LOGGER.debug("RD2000 Man Data: %s", discovery_info.manufacturer_data)
@@ -162,7 +167,9 @@ class RD200ConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("RD2000 service data: %s", discovery_info.service_data)
             _LOGGER.debug("RD2000 service uuids: %s", discovery_info.service_uuids)
             _LOGGER.debug("RD2000 rssi: %s", discovery_info.rssi)
-            _LOGGER.debug("RD2000 advertisement: %s", discovery_info.advertisement.local_name)
+            _LOGGER.debug(
+                "RD2000 advertisement: %s", discovery_info.advertisement.local_name
+            )
             try:
                 device = await self._get_device_data(discovery_info)
             except RD200DeviceUpdateError:

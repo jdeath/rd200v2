@@ -93,9 +93,7 @@ async def async_setup_entry(
     """Set up the RD200 BLE sensors."""
     is_metric = hass.config.units is METRIC_SYSTEM
 
-    coordinator: DataUpdateCoordinator[RD200Device] = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinator: DataUpdateCoordinator[RD200Device] = hass.data[DOMAIN][entry.entry_id]
 
     # we need to change some units
     sensors_mapping = SENSORS_MAPPING_TEMPLATE.copy()
@@ -122,9 +120,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class RD200Sensor(
-    CoordinatorEntity[DataUpdateCoordinator[RD200Device]], SensorEntity
-):
+class RD200Sensor(CoordinatorEntity[DataUpdateCoordinator[RD200Device]], SensorEntity):
     """RD200 BLE sensors for the device."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -154,7 +150,7 @@ class RD200Sensor(
             },
             name=name,
             manufacturer="Ecosense",
-            model="RD200 V2",
+            model="RD200",
             hw_version=rd200_device.hw_version,
             sw_version=rd200_device.sw_version,
         )
