@@ -7,7 +7,7 @@ Only works for RD200 Version 2 units with serial numbers starting with either FR
 
 If you are pretty sure it is a version 2 device, but has a differnet serial number prefix, edit the manifest.json and line 152 in config_flow.py to include you prefix. If it works, post an issue or a PR and I can add it in.
 
-Latest releaae might work for version 1 (FR:R2 serial numbers), but probably will require a few testers to propose changes. V1 only supports current radon value, not long-term or peak readings.
+Latest release might work for version 1 (FR:R2 serial numbers), but probably will require a few testers to propose changes. V1 currently supports current radon value, not long-term or peak readings.
 
 A python script is posted for people to help find important fields.
 
