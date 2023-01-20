@@ -13,6 +13,12 @@ A python script is posted for people to help find important fields.
 
 Note for ESPHome BT Proxy: Retrieving the radon peak value is not stable. Usually works on first reboot of homeassistant, but many people have problems after that. USB Adapters do not have this problem. This is because the data is in a 68 byte long array and something (MTU??) is keeping ESPHome from returning more than 20 bytes after the first connection. An issue has been created: https://github.com/esphome/issues/issues/4041
 
+A fix for the peak sensor has been posted by the legendary @bdraco and seems to work. Should be in the next version of the ESPHome proxy. Until then, add this to your esphome .yaml and recompile/upload the firmware:
+```
+external_components:
+   - source: github://pr#4322
+     components: [ esp32_ble_client ]
+```
 | Reading | Write Value | Data Location | Data Format | Unit | Added in Integration |
 | - | - | - | - | - | - |
 | `Current Radon` | `0x50` | `data[2:4]` | little endian ushort | Bq/m<sup>3</sup> | Yes |
