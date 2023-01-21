@@ -28,4 +28,5 @@ external_components:
 | `Serial` | `0x40` | `data[8:11] + data[2:8] + data[11:15]` | chars |  | No |  
 | `Model` | `0x40` | `data[16:21]` | chars |  | No |  
 | `Firmware` | `0x40` | `data[22:30]` | chars |  | No |  
-| `Uptime` | ?? | ?? | ?? | ?? | No |  
+| `Uptime Minutes Field` | `0x51` | `data[4:6]` | little endian ushort | minutes  | Yes |  
+| `Uptime Miliseconds Field` | `0x51` | `data[3:5]` | little endian ushort | miliseconds  | Yes | 
