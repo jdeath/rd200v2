@@ -19,6 +19,7 @@ from homeassistant.const import (
     PERCENTAGE,
     UnitOfPressure,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
@@ -63,6 +64,19 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
         name="Radon 1-month Level",
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:radioactive",
+    ),
+    "radon_uptime": SensorEntityDescription(
+        key="radon_uptime",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        name="Radon Uptime",
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:timer-outline",
+    ),
+    "radon_uptime_string": SensorEntityDescription(
+        key="radon_uptime_string",
+        name="Radon Uptime String",
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:timer-outline",
     ),
     "temperature": SensorEntityDescription(
         key="temperature",
