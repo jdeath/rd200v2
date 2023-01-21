@@ -95,8 +95,12 @@ class RD200BluetoothDeviceData:
         if self._command_data is not None and len(self._command_data) == 12:
             RadonValueBQ = struct.unpack("<H", self._command_data[2:4])[0]
             device.sensors["radon"] = float(RadonValueBQ)
+
             if not self.is_metric:
                 device.sensors["radon"] = float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER
+                _LOGGER.debug(
+                    "New Radon: " + str(float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER)
+                )
             RadonValueBQ = struct.unpack("<H", self._command_data[4:6])[0]
             device.sensors["radon_1day_level"] = float(RadonValueBQ)
             if not self.is_metric:
@@ -113,6 +117,46 @@ class RD200BluetoothDeviceData:
             device.sensors["radon"] = None
             device.sensors["radon_1day_level"] = None
             device.sensors["radon_1month_level"] = None
+
+        self._command_data = None
+        return device
+
+    async def _get_radon_uptime(
+        self, client: BleakClient, device: RD200Device
+    ) -> RD200Device:
+
+        self._event = asyncio.Event()
+        await client.start_notify(
+            RADON_CHARACTERISTIC_UUID_READ, self.notification_handler
+        )
+        await client.write_gatt_char(RADON_CHARACTERISTIC_UUID_WRITE, b"\x51")
+
+        # Wait for up to fice seconds to see if a
+        # callback comes in.
+        try:
+            await asyncio.wait_for(self._event.wait(), 5)
+        except asyncio.TimeoutError:
+            self.logger.warn("Timeout getting command data.")
+
+        await client.stop_notify(RADON_CHARACTERISTIC_UUID_READ)
+
+        if self._command_data is not None and len(self._command_data) == 16:
+
+            uptimeMinutes = struct.unpack("<H", self._command_data[4:6])[0]
+            uptimeMillis = struct.unpack("<H", self._command_data[3:5])[0]
+            device.sensors["radon_uptime"] = (
+                float(uptimeMinutes) * 60 + float(uptimeMillis) / 1000
+            )
+            day = int (uptimeMinutes // 1440)
+            hours = int (uptimeMinutes % 1440) // 60
+            mins = int (uptimeMinutes % 1440) % 60
+            sec = int(uptimeMillis / 1000)
+    
+            device.sensors["radon_uptime_string"] = (
+                str(day) + "d " + str(hours) + ":" + str(mins) + ":" + str(sec)
+            )
+        else:
+            device.sensors["radon_uptime"] = None
 
         self._command_data = None
         return device
@@ -181,6 +225,9 @@ class RD200BluetoothDeviceData:
                 device.sensors["radon_peak"] = (
                     float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER
                 )
+                _LOGGER.debug(
+                    "New Radon Peak: " + str(float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER)
+                )
         else:
             device.sensors["radon_peak"] = None
 
@@ -198,6 +245,7 @@ class RD200BluetoothDeviceData:
         else:
             device = await self._get_radon(client, device)
             device = await self._get_radon_peak(client, device)
+            device = await self._get_radon_uptime(client, device)
 
         await client.disconnect()
 
