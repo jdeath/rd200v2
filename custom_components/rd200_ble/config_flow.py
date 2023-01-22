@@ -69,7 +69,7 @@ class RD200ConfigFlow(ConfigFlow, domain=DOMAIN):
             data = await rd200.update_device(ble_device)
             data.name = discovery_info.advertisement.local_name
             data.address = discovery_info.address
-            data.indentifer = discovery_info.advertisement.local_name
+            data.identifier = discovery_info.advertisement.local_name
             data.hw_version = ("Version 2",)
             data.sw_version = ("V 2.0.2",)
         except BleakError as err:
