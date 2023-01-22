@@ -11,7 +11,7 @@ Latest release might work for version 1 (FR:R2 serial numbers), but need testers
 
 A python script is posted for people to help find important fields.
 
-If use ESPHome BT proxy, update to ESPHome 12.4 to allow radon peak value to work correctly
+If use ESPHome BT proxy, update to ESPHome 2022.12.4 to allow radon peak value to work correctly.
 
 | Reading | Write Value | Data Location | Data Format | Unit | Added in Integration |
 | - | - | - | - | - | - |
