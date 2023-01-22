@@ -239,7 +239,9 @@ class RD200BluetoothDeviceData:
 
         client = await establish_connection(BleakClient, ble_device, ble_device.address)
         device = RD200Device()
-
+        device.name = ble_device.name
+        device.address = ble_device.address
+            
         if ble_device.name.startswith("FR:R2"):
             device = await self._get_radon_oldVersion(client, device)
         else:
