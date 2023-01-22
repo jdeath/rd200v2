@@ -153,7 +153,7 @@ class RD200BluetoothDeviceData:
             sec = int(uptimeMillis / 1000)
     
             device.sensors["radon_uptime_string"] = (
-                str(day) + "d " + str(hours) + ":" + str(mins) + ":" + str(sec)
+                str(day) + "d " + str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(sec).zfill(2)
             )
         else:
             device.sensors["radon_uptime"] = None
