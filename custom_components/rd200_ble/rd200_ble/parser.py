@@ -182,14 +182,22 @@ class RD200BluetoothDeviceData:
 
         await client.stop_notify(RADON_CHARACTERISTIC_UUID_READ_OLDVERSION)
 
-        if self._command_data is not None and len(self._command_data) > 6:
+        if self._command_data is not None and len(self._command_data) >= 13:
             RadonValuePCI = struct.unpack("<f", self._command_data[2:6])[0]
-            device.sensors["radon"] = float(RadonValuePCI)
+            device.sensors["radon"] = round(float(RadonValuePCI),2)
             if self.is_metric:
-                device.sensors["radon"] = float(RadonValuePCI) / BQ_TO_PCI_MULTIPLIER
-
-            device.sensors["radon_1day_level"] = None
-            device.sensors["radon_1month_level"] = None
+                device.sensors["radon"] = round(float(RadonValuePCI) / BQ_TO_PCI_MULTIPLIER,2)
+            
+            RadonValuePCI = struct.unpack("<f", self._command_data[6:10])[0]
+            device.sensors["radon_1day_level"] = round(float(RadonValuePCI),2)
+            if self.is_metric:
+                device.sensors["radon_1day_level"] = round(float(RadonValuePCI) / BQ_TO_PCI_MULTIPLIER,2)
+            
+            RadonValuePCI = struct.unpack("<f", self._command_data[10:14])[0]
+            device.sensors["radon_1month_level"] = round(float(RadonValuePCI),2)
+            if self.is_metric:
+                device.sensors["radon_1month_level"] = round(float(RadonValuePCI) / BQ_TO_PCI_MULTIPLIER,2)
+                
         else:
             device.sensors["radon"] = None
             device.sensors["radon_1day_level"] = None
