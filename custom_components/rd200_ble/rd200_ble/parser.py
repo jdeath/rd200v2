@@ -236,6 +236,8 @@ class RD200BluetoothDeviceData:
                 _LOGGER.debug(
                     "New Radon Peak: " + str(float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER)
                 )
+            device.sw_version = self._command_data[22:30].decode('utf-8')
+            device.hw_version = self._command_data[16:21].decode('utf-8')
         else:
             device.sensors["radon_peak"] = None
 
