@@ -3,15 +3,13 @@ RadonEye RD200 (Version 1 and 2) Integration for Homeasssistant
 
 Based on: https://github.com/EtoTen/radonreader/ and the AirThings BLE Homeassistant Integration (https://github.com/home-assistant/core/tree/dev/homeassistant/components/airthings_ble) and https://github.com/vincegio/airthings-ble
 
-Works for RD200 Version 2 units with serial numbers starting with either FR:RU (United States) , FR:RE (Spain) , FR:GI (??? but sold in the US).
-
-Now works for version 1 (FR:R2 serial numbers). V1 integration currently only supports current radon value, 1 day and 1 month readings. 
+Works for RD200 Version 2 units with serial numbers starting with either FR:RU (United States) , FR:RE (Spain) , FR:GI (??? but sold in the US). Now works for version 1 (FR:R2 serial numbers). V1 integration currently only supports current radon value, 1 day and 1 month readings. Note the box and the device display do not show the "FR:" portion of the serial number.
 
 If you are pretty sure it is a version 2 device, but has a differnet serial number prefix, edit the manifest.json and line 152 in config_flow.py to include you prefix. If it works, post an issue or a PR and I can add it in.
 
 A python script is posted for people to help find important fields in the V2.
 
-If use ESPHome BT proxy, update to ESPHome 2022.12.4 to allow Verstion 2 radon peak value to work correctly.
+If use ESPHome BT proxy, update to at least ESPHome 2022.12.4 to allow Version 2 radon peak value to work correctly.
 
 ### Installation Instructions
 - Add this repo into HACS
@@ -22,7 +20,6 @@ If use ESPHome BT proxy, update to ESPHome 2022.12.4 to allow Verstion 2 radon p
 - It should find it and set it up
 
 Note: If used the ESPHome integration in the past, you must remove the RD200 MAC address from the `ble_client:` section. 
-
 
 ### Version 2 Data locations:
 | Reading | Write Value | Data Location | Data Format | Unit | Added in Integration |
