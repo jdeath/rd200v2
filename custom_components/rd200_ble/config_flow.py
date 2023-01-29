@@ -70,8 +70,6 @@ class RD200ConfigFlow(ConfigFlow, domain=DOMAIN):
             data.name = discovery_info.advertisement.local_name
             data.address = discovery_info.address
             data.identifier = discovery_info.advertisement.local_name
-            data.hw_version = ("Version 2",)
-            data.sw_version = ("V 2.0.2",)
         except BleakError as err:
             _LOGGER.error(
                 "Error connecting to and getting data from %s: %s",
