@@ -94,24 +94,21 @@ class RD200BluetoothDeviceData:
 
         if self._command_data is not None and len(self._command_data) == 12:
             RadonValueBQ = struct.unpack("<H", self._command_data[2:4])[0]
-            device.sensors["radon"] = float(RadonValueBQ)
-
+            device.sensors["radon"] = round(float(RadonValueBQ),2)
             if not self.is_metric:
-                device.sensors["radon"] = float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER
-                _LOGGER.debug(
-                    "New Radon: " + str(float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER)
-                )
+                device.sensors["radon"] = round(float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER,2)
+   
             RadonValueBQ = struct.unpack("<H", self._command_data[4:6])[0]
-            device.sensors["radon_1day_level"] = float(RadonValueBQ)
+            device.sensors["radon_1day_level"] = round(float(RadonValueBQ),2)
             if not self.is_metric:
                 device.sensors["radon_1day_level"] = (
-                    float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER
+                    round(float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER,2)
                 )
             RadonValueBQ = struct.unpack("<H", self._command_data[6:8])[0]
-            device.sensors["radon_1month_level"] = float(RadonValueBQ)
+            device.sensors["radon_1month_level"] = round(float(RadonValueBQ),2)
             if not self.is_metric:
                 device.sensors["radon_1month_level"] = (
-                    float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER
+                    round(float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER,2)
                 )
         else:
             device.sensors["radon"] = None
@@ -145,7 +142,7 @@ class RD200BluetoothDeviceData:
             uptimeMinutes = struct.unpack("<H", self._command_data[4:6])[0]
             uptimeMillis = struct.unpack("<H", self._command_data[3:5])[0]
             device.sensors["radon_uptime"] = (
-                float(uptimeMinutes) * 60 + float(uptimeMillis) / 1000
+                int(float(uptimeMinutes) * 60 + float(uptimeMillis) / 1000)
             )
             day = int (uptimeMinutes // 1440)
             hours = int (uptimeMinutes % 1440) // 60
@@ -228,10 +225,10 @@ class RD200BluetoothDeviceData:
 
         if self._command_data is not None and len(self._command_data) == 68:
             RadonValueBQ = struct.unpack("<H", self._command_data[51:53])[0]
-            device.sensors["radon_peak"] = float(RadonValueBQ)
+            device.sensors["radon_peak"] = round(float(RadonValueBQ),2)
             if not self.is_metric:
                 device.sensors["radon_peak"] = (
-                    float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER
+                    round(float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER,2)
                 )
                 _LOGGER.debug(
                     "New Radon Peak: " + str(float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER)
