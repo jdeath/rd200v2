@@ -20,5 +20,8 @@
 	{
       "local_name": "FR:R2*"
     }
+	{
+      "local_name": "FR:HA*"
+    }
   ]
 }
