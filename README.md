@@ -11,6 +11,12 @@ A python script is posted for people to help find important fields in the V2.
 
 If use ESPHome BT proxy, update to at least ESPHome 2022.12.4 to allow Version 2 radon peak value to work correctly.
 
+If use a Raspberry Pi built-in BT adapter, the Peak and Uptime sensor may not work after the first update and cause itegration to hang. Being investigated. Two options to fix: Use an ESPHome proxy (recommended) or comment out (add a #) to line 257 and 258 of the parser.py, like so:
+```
+ #device = await self._get_radon_peak(client, device)
+ #device = await self._get_radon_uptime(client, device)
+```
+
 ### Installation Instructions
 - Add this repo into HACS
 - Install integration
