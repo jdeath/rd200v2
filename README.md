@@ -3,7 +3,7 @@ RadonEye RD200 (Version 2 and now Version 1) Integration for Homeasssistant. Thr
 
 [![Stargazers repo roster for @jdeath/rd200v2](https://git-lister.onrender.com/api/stars/jdeath/rd200v2?limit=20)](https://github.com/jdeath/rd200v2/stargazers)
 
-Based on: https://github.com/EtoTen/radonreader/ and the AirThings BLE Homeassistant Integration (https://github.com/home-assistant/core/tree/dev/homeassistant/components/airthings_ble) and https://github.com/vincegio/airthings-ble
+Based on: https://github.com/EtoTen/radonreader/ and the AirThings BLE Homeassistant Integration (https://github.com/home-assistant/core/tree/dev/homeassistant/components/airthings_ble) and https://github.com/vincegio/airthings-ble, and the ESPHome Native Integration (https://esphome.io/components/sensor/radon_eye_ble.html)
 
 Works for RD200 Version 2 units with serial numbers starting with either FR:RU (United States) , FR:RE (Spain) , FR:GI and FR:HA (??? both sold in the US). Now works for version 1 (FR:R2 serial numbers). V1 integration currently only supports current radon value, 1 day and 1 month readings. Note the box and the device display do not show the "FR:" portion of the serial number.
 
