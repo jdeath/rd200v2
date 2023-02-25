@@ -3,7 +3,7 @@
   "name": "RD200 BLE",
   "config_flow": true,
   "documentation": "https://www.github.com/jdeath/rd200v2",
-  "dependencies": ["bluetooth"],
+  "dependencies": ["bluetooth_adapters"],
   "codeowners": ["@jdeath"],
   "iot_class": "local_polling",
   "version": "1.0",
@@ -22,6 +22,9 @@
     },
 	{
       "local_name": "FR:HA*"
+    },
+	{
+      "local_name": "FR:RD*"
     }
   ]
 }
