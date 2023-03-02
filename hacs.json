@@ -1,7 +1,5 @@
 {
   "name": "rd200v2",
-  "domains": ["light"],
-  "iot_class": "local push",
   "render_readme": true,
   "homeassistant": "2022.12.1"
 }
