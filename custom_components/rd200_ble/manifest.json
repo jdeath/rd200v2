@@ -1,12 +1,6 @@
 {
   "domain": "rd200_ble",
   "name": "RD200 BLE",
-  "config_flow": true,
-  "documentation": "https://www.github.com/jdeath/rd200v2",
-  "dependencies": ["bluetooth_adapters"],
-  "codeowners": ["@jdeath"],
-  "iot_class": "local_polling",
-  "version": "1.0",
   "bluetooth": [
     {
       "local_name": "FR:RU*"
@@ -27,4 +21,11 @@
       "local_name": "FR:RD*"
     }
   ]
+  "codeowners": ["@jdeath"],	
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.github.com/jdeath/rd200v2",
+  "issue_tracker": "https://github.com/jdeath/Hubspace-Homeassistant/issues",
+  "iot_class": "local_polling",
+  "version": "1.0",
 }
