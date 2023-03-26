@@ -18,6 +18,7 @@ If use a Raspberry Pi built-in BT adapter, the Peak and Uptime sensor may not wo
  #device = await self._get_radon_peak(client, device)
  #device = await self._get_radon_uptime(client, device)
 ```
+An issue has been created in homeassistant for the BT performance, but it could just be the Raspberry Pi BT adapter stinks! https://github.com/home-assistant/core/issues/90307
 
 ### Installation Instructions
 - Add this repo into HACS
