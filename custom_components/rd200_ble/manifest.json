@@ -32,6 +32,6 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.github.com/jdeath/rd200v2",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/jdeath/Hubspace-Homeassistant/issues",
+  "issue_tracker": "https://github.com/jdeath/rd200v2/issues",
   "version": "1.0"
 }
