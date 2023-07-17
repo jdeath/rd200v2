@@ -75,7 +75,7 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     "radon_uptime_string": SensorEntityDescription(
         key="radon_uptime_string",
         name="Radon Uptime String",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         icon="mdi:timer-outline",
     ),
     "temperature": SensorEntityDescription(
@@ -137,7 +137,8 @@ async def async_setup_entry(
 class RD200Sensor(CoordinatorEntity[DataUpdateCoordinator[RD200Device]], SensorEntity):
     """RD200 BLE sensors for the device."""
 
-    _attr_state_class = SensorStateClass.MEASUREMENT
+    ## Setting the Device State to None fixes Uptime String, Appears to override line: https://github.com/Makr91/rd200v2/blob/3d87d6e005f5efb7c143ff32256153c517ccade9/custom_components/rd200_ble/sensor.py#L78
+    _attr_state_class = None
     _attr_has_entity_name = True
 
     def __init__(
