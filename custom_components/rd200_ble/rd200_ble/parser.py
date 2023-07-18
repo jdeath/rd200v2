@@ -78,18 +78,24 @@ class RD200BluetoothDeviceData:
     async def _get_radon(self, client: BleakClient, device: RD200Device) -> RD200Device:
 
         self._event = asyncio.Event()
-        await client.start_notify(
-            RADON_CHARACTERISTIC_UUID_READ, self.notification_handler
-        )
+        try:
+            await client.start_notify(
+                RADON_CHARACTERISTIC_UUID_READ, self.notification_handler
+            )
+        except bleak.exc.BleakError:
+            self.logger.warn("Bleak error 1")
+            
         await client.write_gatt_char(RADON_CHARACTERISTIC_UUID_WRITE, WRITE_VALUE)
 
         # Wait for up to fice seconds to see if a
         # callback comes in.
         try:
-            await asyncio.wait_for(self._event.wait(), 5)
+            await asyncio.wait_for(self._event.wait(), 10)
         except asyncio.TimeoutError:
             self.logger.warn("Timeout getting command data.")
-
+        except bleak.exc.BleakError:
+            self.logger.warn("Bleak error 2")
+            
         await client.stop_notify(RADON_CHARACTERISTIC_UUID_READ)
 
         if self._command_data is not None and len(self._command_data) == 12:
@@ -123,9 +129,13 @@ class RD200BluetoothDeviceData:
     ) -> RD200Device:
 
         self._event = asyncio.Event()
-        await client.start_notify(
-            RADON_CHARACTERISTIC_UUID_READ, self.notification_handler
-        )
+        try:
+            await client.start_notify(
+                RADON_CHARACTERISTIC_UUID_READ, self.notification_handler
+            )
+        except bleak.exc.BleakError:
+            self.logger.warn("Bleak error 1")
+            
         await client.write_gatt_char(RADON_CHARACTERISTIC_UUID_WRITE, b"\x51")
 
         # Wait for up to fice seconds to see if a
@@ -134,21 +144,25 @@ class RD200BluetoothDeviceData:
             await asyncio.wait_for(self._event.wait(), 5)
         except asyncio.TimeoutError:
             self.logger.warn("Timeout getting command data.")
-
+        except bleak.exc.BleakError:
+            self.logger.warn("Bleak error 2")
+            
         await client.stop_notify(RADON_CHARACTERISTIC_UUID_READ)
 
         if self._command_data is not None and len(self._command_data) == 16:
 
-            uptimeMinutes = struct.unpack("<H", self._command_data[4:6])[0]
-            uptimeMillis = struct.unpack("<H", self._command_data[3:5])[0]
+            uptimeMinutes = struct.unpack("<I", self._command_data[4:8])[0]
+            #uptimeMillis = struct.unpack("<H", self._command_data[3:5])[0]
+            uptimeMillis = 0
             device.sensors["radon_uptime"] = (
                 int(float(uptimeMinutes) * 60 + float(uptimeMillis) / 1000)
             )
             day = int (uptimeMinutes // 1440)
             hours = int (uptimeMinutes % 1440) // 60
             mins = int (uptimeMinutes % 1440) % 60
-            sec = int(uptimeMillis / 1000)
-    
+            #sec = int(uptimeMillis / 1000)
+            sec = 0
+            
             device.sensors["radon_uptime_string"] = (
                 str(day) + "d " + str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(sec).zfill(2)
             )
@@ -208,9 +222,13 @@ class RD200BluetoothDeviceData:
     ) -> RD200Device:
 
         self._event = asyncio.Event()
-        await client.start_notify(
-            RADON_CHARACTERISTIC_UUID_READ, self.notification_handler
-        )
+        try:
+            await client.start_notify(
+                RADON_CHARACTERISTIC_UUID_READ, self.notification_handler
+            )
+        except bleak.exc.BleakError:
+            self.logger.warn("Bleak error 1")
+            
         await client.write_gatt_char(RADON_CHARACTERISTIC_UUID_WRITE, b"\x40")
 
         # Wait for up to one second to see if a
@@ -220,7 +238,9 @@ class RD200BluetoothDeviceData:
             await asyncio.wait_for(self._event.wait(), 5)
         except asyncio.TimeoutError:
             self.logger.warn("Timeout getting command data.")
-
+        except bleak.exc.BleakError:
+            self.logger.warn("Bleak error 2")
+            
         await client.stop_notify(RADON_CHARACTERISTIC_UUID_READ)
 
         if self._command_data is not None and len(self._command_data) == 68:
