@@ -40,5 +40,5 @@ Note: If used the ESPHome integration in the past, you must remove the RD200 MAC
 | `Serial` | `0x40` | `data[8:11] + data[2:8] + data[11:15]` | chars |  | No |  
 | `Model` | `0x40` | `data[16:21]` | chars |  | Yes |  
 | `Firmware` | `0x40` | `data[22:30]` | chars |  | Yes |  
-| `Uptime Minutes Field` | `0x51` | `data[4:6]` | little endian ushort | minutes  | Yes |  
-| `Uptime Miliseconds Field` | `0x51` | `data[3:5]` I think this is wrong, but who cares! | little endian ushort | miliseconds  | Yes | 
+| `Uptime Minutes Field` | `0x51` | `data[4:8]` | little endian uint | minutes  | Yes |  
+| `Uptime seconds Field` | `??` | `??` | little endian ushort | ??  | no: hard coded to 0 | 
