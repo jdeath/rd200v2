@@ -11,12 +11,21 @@ import logging
 
 # from logging import Logger
 from math import exp
-from typing import Any, Callable, Tuple
+from typing import Any, Callable, Tuple, TypeVar, cast
 
 from bleak import BleakClient, BleakError
 from bleak.backends.device import BLEDevice
 from bleak_retry_connector import establish_connection
 
+WrapFuncType = TypeVar("WrapFuncType", bound=Callable[..., Any])
+
+class BleakCharacteristicMissing(BleakError):
+    """Raised when a characteristic is missing from a service."""
+
+
+class BleakServiceMissing(BleakError):
+    """Raised when a service is missing."""
+    
 from .const import (
     BQ_TO_PCI_MULTIPLIER,
 )
@@ -74,7 +83,33 @@ class RD200BluetoothDeviceData:
         if self._event is None:
             return
         self._event.set()
+    
+    def disconnect_on_missing_services(func: WrapFuncType) -> WrapFuncType:
+        """Define a wrapper to disconnect on missing services and characteristics.
 
+        This must be placed after the retry_bluetooth_connection_error
+        decorator.
+        """
+
+        async def _async_disconnect_on_missing_services_wrap(
+            self, *args: Any, **kwargs: Any
+        ) -> None:
+            try:
+                return await func(self, *args, **kwargs)
+            except (BleakServiceMissing, BleakCharacteristicMissing) as ex:
+                logger.warning(
+                    "%s: Missing service or characteristic, disconnecting to force refetch of GATT services: %s",
+                    self.name,
+                    ex,
+                )
+                if self.client:
+                    await self.client.clear_cache()
+                    await self.client.disconnect()
+                raise
+
+        return cast(WrapFuncType, _async_disconnect_on_missing_services_wrap)
+    
+    @disconnect_on_missing_services
     async def _get_radon(self, client: BleakClient, device: RD200Device) -> RD200Device:
 
         self._event = asyncio.Event()
@@ -124,6 +159,7 @@ class RD200BluetoothDeviceData:
         self._command_data = None
         return device
 
+    @disconnect_on_missing_services
     async def _get_radon_uptime(
         self, client: BleakClient, device: RD200Device
     ) -> RD200Device:
@@ -217,6 +253,7 @@ class RD200BluetoothDeviceData:
         self._command_data = None
         return device
 
+    @disconnect_on_missing_services
     async def _get_radon_peak(
         self, client: BleakClient, device: RD200Device
     ) -> RD200Device:
