@@ -1,179 +1,437 @@
-"""Support for rd200 ble sensors."""
+"""Support for Enphase Envoy solar energy monitor."""
 from __future__ import annotations
 
-import logging
+import datetime
 
-from .rd200_ble import RD200Device
+from time import strftime, localtime
 
-from homeassistant import config_entries
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorEntityDescription,
-    SensorStateClass,
-)
-from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
-    LIGHT_LUX,
-    PERCENTAGE,
-    UnitOfPressure,
-    UnitOfTemperature,
-    UnitOfTime,
-)
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
-from homeassistant.util.unit_system import METRIC_SYSTEM
-
-from .const import DOMAIN, VOLUME_BECQUEREL, VOLUME_PICOCURIE
-
-_LOGGER = logging.getLogger(__name__)
-
-SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
-    "radon": SensorEntityDescription(
-        key="radon",
-        native_unit_of_measurement=VOLUME_BECQUEREL,
-        name="Radon",
-        state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:radioactive",
-    ),
-    "radon_peak": SensorEntityDescription(
-        key="radon_peak",
-        native_unit_of_measurement=VOLUME_BECQUEREL,
-        name="Radon Peak",
-        state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:radioactive",
-    ),
-    "radon_1day_level": SensorEntityDescription(
-        key="radon_1day_level",
-        native_unit_of_measurement=VOLUME_BECQUEREL,
-        name="Radon 1-day Level",
-        state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:radioactive",
-    ),
-    "radon_1month_level": SensorEntityDescription(
-        key="radon_1month_level",
-        native_unit_of_measurement=VOLUME_BECQUEREL,
-        name="Radon 1-month Level",
-        state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:radioactive",
-    ),
-    "radon_uptime": SensorEntityDescription(
-        key="radon_uptime",
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        name="Radon Uptime",
-        state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:timer-outline",
-    ),
-    "radon_uptime_string": SensorEntityDescription(
-        key="radon_uptime_string",
-        name="Radon Uptime String",
-        state_class=None,
-        icon="mdi:timer-outline",
-    ),
-    "temperature": SensorEntityDescription(
-        key="temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        name="Temperature",
-    ),
-    "humidity": SensorEntityDescription(
-        key="humidity",
-        device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
-        name="Humidity",
-    ),
-    "pressure": SensorEntityDescription(
-        key="pressure",
-        device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=UnitOfPressure.MBAR,
-        name="Pressure",
-    ),
-}
-
+from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from .const import BATTERY_ENERGY_DISCHARGED_SENSOR, BATTERY_ENERGY_CHARGED_SENSOR, COORDINATOR, DOMAIN, NAME, SENSORS, ICON
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the RD200 BLE sensors."""
-    is_metric = hass.config.units is METRIC_SYSTEM
-
-    coordinator: DataUpdateCoordinator[RD200Device] = hass.data[DOMAIN][entry.entry_id]
-
-    # we need to change some units
-    sensors_mapping = SENSORS_MAPPING_TEMPLATE.copy()
-    if not is_metric:
-        for val in sensors_mapping.values():
-            if val.native_unit_of_measurement is not VOLUME_BECQUEREL:
-                continue
-            val.native_unit_of_measurement = VOLUME_PICOCURIE
+    """Set up envoy sensor platform."""
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = data[COORDINATOR]
+    name = data[NAME]
 
     entities = []
-    _LOGGER.debug("got sensors: %s", coordinator.data.sensors)
-    for sensor_type, sensor_value in coordinator.data.sensors.items():
-        if sensor_type not in sensors_mapping:
-            _LOGGER.debug(
-                "Unknown sensor type detected: %s, %s",
-                sensor_type,
-                sensor_value,
+    for sensor_description in SENSORS:
+        if (sensor_description.key == "inverters"):
+            if (coordinator.data.get("inverters_production") is not None):
+                for inverter in coordinator.data["inverters_production"]:
+                    entity_name = f"{name} {sensor_description.name} {inverter}"
+                    split_name = entity_name.split(" ")
+                    serial_number = split_name[-1]
+                    entities.append(
+                        EnvoyInverterEntity(
+                            sensor_description,
+                            entity_name,
+                            name,
+                            config_entry.unique_id,
+                            serial_number,
+                            coordinator,
+                        )
+                    )
+        elif (sensor_description.key == "batteries"):
+            if (coordinator.data.get("batteries") is not None):
+                for battery in coordinator.data["batteries"]:
+                    entity_name = f"{name} {sensor_description.name} {battery}"
+                    serial_number = battery
+                    entities.append(
+                        EnvoyBatteryEntity(
+                            sensor_description,
+                            entity_name,
+                            name,
+                            config_entry.unique_id,
+                            serial_number,
+                            coordinator
+                        )
+                    )
+
+        elif (sensor_description.key == "current_battery_capacity"):
+            if (coordinator.data.get("batteries") is not None):
+                battery_capacity_entity = TotalBatteryCapacityEntity(
+                    sensor_description,
+                    f"{name} {sensor_description.name}",
+                    name,
+                    config_entry.unique_id,
+                    None,
+                    coordinator
+                )
+                entities.append(battery_capacity_entity)
+
+                entities.append(
+                    BatteryEnergyChangeEntity(
+                        BATTERY_ENERGY_CHARGED_SENSOR,
+                        f"{name} {BATTERY_ENERGY_CHARGED_SENSOR.name}",
+                        name,
+                        config_entry.unique_id,
+                        None,
+                        battery_capacity_entity,
+                        True
+                    )
+                )
+
+                entities.append(
+                    BatteryEnergyChangeEntity(
+                        BATTERY_ENERGY_DISCHARGED_SENSOR,
+                        f"{name} {BATTERY_ENERGY_DISCHARGED_SENSOR.name}",
+                        name,
+                        config_entry.unique_id,
+                        None,
+                        battery_capacity_entity,
+                        False
+                    )
+                )
+
+        elif (sensor_description.key == "total_battery_percentage"):
+            if (coordinator.data.get("batteries") is not None):
+                entities.append(TotalBatteryPercentageEntity(
+                        sensor_description,
+                        f"{name} {sensor_description.name}",
+                        name,
+                        config_entry.unique_id,
+                        None,
+                        coordinator
+                    ))
+
+        else:
+            data = coordinator.data.get(sensor_description.key)
+            if isinstance(data, str) and "not available" in data:
+                continue
+
+            entity_name = f"{name} {sensor_description.name}"
+            entities.append(
+                CoordinatedEnvoyEntity(
+                    sensor_description,
+                    entity_name,
+                    name,
+                    config_entry.unique_id,
+                    None,
+                    coordinator,
+                )
             )
-            continue
-        entities.append(
-            RD200Sensor(coordinator, coordinator.data, sensors_mapping[sensor_type])
-        )
 
     async_add_entities(entities)
 
-
-class RD200Sensor(CoordinatorEntity[DataUpdateCoordinator[RD200Device]], SensorEntity):
-    """RD200 BLE sensors for the device."""
-
-    ## Setting the Device State to None fixes Uptime String, Appears to override line: https://github.com/Makr91/rd200v2/blob/3d87d6e005f5efb7c143ff32256153c517ccade9/custom_components/rd200_ble/sensor.py#L78
-    _attr_state_class = None
-    _attr_has_entity_name = True
+class EnvoyEntity(SensorEntity):
+    """Envoy entity"""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
-        rd200_device: RD200Device,
-        entity_description: SensorEntityDescription,
-    ) -> None:
-        """Populate the rd200 entity with relevant data."""
-        super().__init__(coordinator)
-        self.entity_description = entity_description
+        description,
+        name,
+        device_name,
+        device_serial_number,
+        serial_number,
+    ):
+        """Initialize Envoy entity."""
+        self.entity_description = description
+        self._name = name
+        self._serial_number = serial_number
+        self._device_name = device_name
+        self._device_serial_number = device_serial_number
 
-        name = f"{rd200_device.name} {rd200_device.identifier}"
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
 
-        self._attr_unique_id = f"{name}_{entity_description.key}"
+    @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        if self._serial_number:
+            return self._serial_number
+        if self._device_serial_number:
+            return f"{self._device_serial_number}_{self.entity_description.key}"
 
-        self._id = rd200_device.address
-        self._attr_device_info = DeviceInfo(
-            connections={
-                (
-                    CONNECTION_BLUETOOTH,
-                    rd200_device.address,
-                )
-            },
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return ICON
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return None
+
+    @property
+    def device_info(self) -> DeviceInfo | None:
+        """Return the device_info of the device."""
+        if not self._device_serial_number:
+            return None
+        return DeviceInfo(
+            identifiers={(DOMAIN, str(self._device_serial_number))},
+            manufacturer="Enphase",
+            model="Envoy",
+            name=self._device_name,
+        )
+
+class CoordinatedEnvoyEntity(EnvoyEntity, CoordinatorEntity):
+    def __init__(
+        self,
+        description,
+        name,
+        device_name,
+        device_serial_number,
+        serial_number,
+        coordinator,
+    ):
+        EnvoyEntity.__init__(self, description, name, device_name, device_serial_number, serial_number)
+        CoordinatorEntity.__init__(self, coordinator)
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        return self.coordinator.data.get(self.entity_description.key)
+
+class EnvoyInverterEntity(CoordinatedEnvoyEntity):
+    """Envoy inverter entity."""
+
+    def __init__(
+        self,
+        description,
+        name,
+        device_name,
+        device_serial_number,
+        serial_number,
+        coordinator,
+    ):
+        super().__init__(
+            description=description,
             name=name,
-            manufacturer="Ecosense",
-            model="RD200",
-            hw_version=rd200_device.hw_version,
-            sw_version=rd200_device.sw_version,
+            device_name=device_name,
+            device_serial_number=device_serial_number,
+            serial_number=serial_number,
+            coordinator=coordinator
         )
 
     @property
-    def native_value(self) -> StateType:
-        """Return the value reported by the sensor."""
-        try:
-            return self.coordinator.data.sensors[self.entity_description.key]
-        except KeyError:
-            return None
+    def native_value(self):
+        """Return the state of the sensor."""
+        if (
+            self.coordinator.data.get("inverters_production") is not None
+        ):
+            return self.coordinator.data.get("inverters_production").get(
+                self._serial_number
+            )[0]
+
+        return None
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        if (
+            self.coordinator.data.get("inverters_production") is not None
+        ):
+            value = self.coordinator.data.get("inverters_production").get(
+                self._serial_number
+            )[1]
+            return {"last_reported": value}
+
+        return None
+
+class EnvoyBatteryEntity(CoordinatedEnvoyEntity):
+    """Envoy battery entity."""
+
+    def __init__(
+        self,
+        description,
+        name,
+        device_name,
+        device_serial_number,
+        serial_number,
+        coordinator,
+    ):
+        super().__init__(
+            description=description,
+            name=name,
+            device_name=device_name,
+            device_serial_number=device_serial_number,
+            serial_number=serial_number,
+            coordinator=coordinator
+        )
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        if (
+            self.coordinator.data.get("batteries") is not None
+        ):
+            return self.coordinator.data.get("batteries").get(
+                self._serial_number
+            ).get("percentFull")
+
+        return None
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        if (
+            self.coordinator.data.get("batteries") is not None
+        ):
+            battery = self.coordinator.data.get("batteries").get(
+                self._serial_number
+            )
+            last_reported = strftime(
+                "%Y-%m-%d %H:%M:%S", localtime(battery.get("last_rpt_date"))
+            )
+            return {
+                "last_reported": last_reported,
+                "capacity": battery.get("encharge_capacity")
+            }
+
+        return None
+
+class TotalBatteryCapacityEntity(CoordinatedEnvoyEntity):
+    def __init__(
+        self,
+        description,
+        name,
+        device_name,
+        device_serial_number,
+        serial_number,
+        coordinator,
+    ):
+        super().__init__(
+            description=description,
+            name=name,
+            device_name=device_name,
+            device_serial_number=device_serial_number,
+            serial_number=serial_number,
+            coordinator=coordinator
+        )
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        batteries = self.coordinator.data.get("batteries")
+        if (
+            batteries is not None
+        ):
+            total = 0
+            for battery in batteries:
+                percentage = batteries.get(battery).get("percentFull")
+                capacity = batteries.get(battery).get("encharge_capacity")
+                total += round(capacity * (percentage / 100.0))
+
+            return total
+
+        return None
+
+
+class TotalBatteryPercentageEntity(CoordinatedEnvoyEntity):
+    def __init__(
+        self,
+        description,
+        name,
+        device_name,
+        device_serial_number,
+        serial_number,
+        coordinator,
+    ):
+        super().__init__(
+            description=description,
+            name=name,
+            device_name=device_name,
+            device_serial_number=device_serial_number,
+            serial_number=serial_number,
+            coordinator=coordinator
+        )
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        batteries = self.coordinator.data.get("batteries")
+        if (
+            batteries is not None
+        ):
+            battery_sum = 0
+            for battery in batteries:
+                battery_sum += batteries.get(battery).get("percentFull", 0)
+
+            return round(battery_sum / len(batteries), 2)
+
+        return None
+
+class BatteryEnergyChangeEntity(EnvoyEntity):
+    def __init__(
+        self,
+        description,
+        name,
+        device_name,
+        device_serial_number,
+        serial_number,
+        total_battery_capacity_entity,
+        positive: bool
+    ):
+        super().__init__(
+            description=description,
+            name=name,
+            device_name=device_name,
+            device_serial_number=device_serial_number,
+            serial_number=serial_number,
+        )
+
+        self._sensor_source = total_battery_capacity_entity
+        self._positive = positive
+        self._state = 0
+        self._attr_last_reset = datetime.datetime.now()
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+
+        @callback
+        def calc_change(event):
+            """Handle the sensor state changes."""
+            old_state = event.data.get("old_state")
+            new_state = event.data.get("new_state")
+
+            if (
+                old_state is None
+                or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+                or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            ):
+                self._state = 0
+
+            else:
+                old_state_value = int(old_state.state)
+                new_state_value = int(new_state.state)
+
+                if (self._positive):
+                    if (new_state_value > old_state_value):
+                        self._state = new_state_value - old_state_value
+                    else:
+                        self._state = 0
+
+                else:
+                    if (old_state_value > new_state_value):
+                        self._state = old_state_value - new_state_value
+                    else:
+                        self._state = 0
+
+            self._attr_last_reset = datetime.datetime.now()
+            self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, self._sensor_source.entity_id, calc_change
+            )
+        )
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        return self._state
