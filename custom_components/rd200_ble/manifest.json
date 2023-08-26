@@ -25,6 +25,9 @@
     },
 	{
       "local_name": "FR:GL*"
+    },
+	{
+      "local_name": "FR:GJ*"
     }
   ],
   "codeowners": ["@jdeath"],	
