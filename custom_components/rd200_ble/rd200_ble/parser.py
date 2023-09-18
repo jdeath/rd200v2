@@ -117,8 +117,8 @@ class RD200BluetoothDeviceData:
             await client.start_notify(
                 RADON_CHARACTERISTIC_UUID_READ, self.notification_handler
             )
-        except bleak.exc.BleakError:
-            self.logger.warn("Bleak error 1")
+        except:
+            self.logger.warn("_get_radon Bleak error 1")
             
         await client.write_gatt_char(RADON_CHARACTERISTIC_UUID_WRITE, WRITE_VALUE)
 
@@ -128,8 +128,8 @@ class RD200BluetoothDeviceData:
             await asyncio.wait_for(self._event.wait(), 10)
         except asyncio.TimeoutError:
             self.logger.warn("Timeout getting command data.")
-        except bleak.exc.BleakError:
-            self.logger.warn("Bleak error 2")
+        except:
+            self.logger.warn("_get_radon Bleak error 2")
             
         await client.stop_notify(RADON_CHARACTERISTIC_UUID_READ)
 
@@ -169,8 +169,8 @@ class RD200BluetoothDeviceData:
             await client.start_notify(
                 RADON_CHARACTERISTIC_UUID_READ, self.notification_handler
             )
-        except bleak.exc.BleakError:
-            self.logger.warn("Bleak error 1")
+        except:
+            self.logger.warn("_get_radon_uptime Bleak error 1")
             
         await client.write_gatt_char(RADON_CHARACTERISTIC_UUID_WRITE, b"\x51")
 
@@ -180,8 +180,8 @@ class RD200BluetoothDeviceData:
             await asyncio.wait_for(self._event.wait(), 5)
         except asyncio.TimeoutError:
             self.logger.warn("Timeout getting command data.")
-        except bleak.exc.BleakError:
-            self.logger.warn("Bleak error 2")
+        except:
+            self.logger.warn("_get_radon_uptime Bleak error 2")
             
         await client.stop_notify(RADON_CHARACTERISTIC_UUID_READ)
 
@@ -220,7 +220,7 @@ class RD200BluetoothDeviceData:
             RADON_CHARACTERISTIC_UUID_WRITE_OLDVERSION, WRITE_VALUE
         )
 
-        # Wait for up to fice seconds to see if a
+        # Wait for up to five seconds to see if a
         # callback comes in.
         try:
             await asyncio.wait_for(self._event.wait(), 5)
@@ -252,7 +252,54 @@ class RD200BluetoothDeviceData:
 
         self._command_data = None
         return device
+    
+    async def _get_radon_peak_uptime_oldVersion(
+        self, client: BleakClient, device: RD200Device
+    ) -> RD200Device:
 
+        self._event = asyncio.Event()
+        await client.start_notify(
+            RADON_CHARACTERISTIC_UUID_READ_OLDVERSION, self.notification_handler
+        )
+        await client.write_gatt_char(
+            RADON_CHARACTERISTIC_UUID_WRITE_OLDVERSION, b"\x51"
+        )
+
+        # Wait for up to five seconds to see if a
+        # callback comes in.
+        try:
+            await asyncio.wait_for(self._event.wait(), 5)
+        except asyncio.TimeoutError:
+            self.logger.warn("Timeout getting command data.")
+
+        await client.stop_notify(RADON_CHARACTERISTIC_UUID_READ_OLDVERSION)
+
+        if self._command_data is not None and len(self._command_data) >= 13:
+            RadonValuePCI = struct.unpack("<f", self._command_data[12:16])[0]
+            device.sensors["radon_peak"] = round(float(RadonValuePCI),2)
+            if self.is_metric:
+                device.sensors["radon_peak"] = round(float(RadonValuePCI) / BQ_TO_PCI_MULTIPLIER,2)
+
+            uptimeMinutes = struct.unpack("<I", self._command_data[4:8])[0]
+            device.sensors["radon_uptime"] = (
+                int(uptimeMinutes)
+            )
+            day = int (uptimeMinutes // 1440)
+            hours = int (uptimeMinutes % 1440) // 60
+            mins = int (uptimeMinutes % 1440) % 60
+            sec = 0
+            
+            device.sensors["radon_uptime_string"] = (
+                str(day) + "d " + str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(sec).zfill(2)
+            )
+        else:
+            device.sensors["radon_peak"] = None
+            device.sensors["radon_uptime"] = None
+            device.sensors["radon_uptime_string"] = None
+
+        self._command_data = None
+        return device
+    
     @disconnect_on_missing_services
     async def _get_radon_peak(
         self, client: BleakClient, device: RD200Device
@@ -263,8 +310,8 @@ class RD200BluetoothDeviceData:
             await client.start_notify(
                 RADON_CHARACTERISTIC_UUID_READ, self.notification_handler
             )
-        except bleak.exc.BleakError:
-            self.logger.warn("Bleak error 1")
+        except:
+            self.logger.warn("_get_radon_peak Bleak error 1")
             
         await client.write_gatt_char(RADON_CHARACTERISTIC_UUID_WRITE, b"\x40")
 
@@ -275,8 +322,8 @@ class RD200BluetoothDeviceData:
             await asyncio.wait_for(self._event.wait(), 5)
         except asyncio.TimeoutError:
             self.logger.warn("Timeout getting command data.")
-        except bleak.exc.BleakError:
-            self.logger.warn("Bleak error 2")
+        except:
+            self.logger.warn("_get_radon_peak Bleak error 2")
             
         await client.stop_notify(RADON_CHARACTERISTIC_UUID_READ)
 
@@ -308,6 +355,7 @@ class RD200BluetoothDeviceData:
             
         if ble_device.name.startswith("FR:R2"):
             device = await self._get_radon_oldVersion(client, device)
+            device = await self._get_radon_peak_uptime_oldVersion(client, device)
         else:
             device = await self._get_radon(client, device)
             device = await self._get_radon_peak(client, device)
