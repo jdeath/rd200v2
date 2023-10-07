@@ -20,6 +20,8 @@ If use a Raspberry Pi built-in BT adapter, the Peak and Uptime sensor may not wo
 ```
 An issue has been created in homeassistant for the BT performance, but it could just be the Raspberry Pi BT adapter stinks! https://github.com/home-assistant/core/issues/90307
 
+For VMWare: A user solved "regularly loosing-connection" on their Win10/Nuc running Home-Assistant in a VMWare Virtual machine by updating from VMware Pro 15 to VMWare (free) Verions 16. 
+
 ### Installation Instructions
 - Add this repo into HACS
 - Install integration
