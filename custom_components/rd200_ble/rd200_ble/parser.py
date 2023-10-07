@@ -282,7 +282,7 @@ class RD200BluetoothDeviceData:
 
             uptimeMinutes = struct.unpack("<I", self._command_data[4:8])[0]
             device.sensors["radon_uptime"] = (
-                int(uptimeMinutes)
+                int(uptimeMinutes) * 60
             )
             day = int (uptimeMinutes // 1440)
             hours = int (uptimeMinutes % 1440) // 60
