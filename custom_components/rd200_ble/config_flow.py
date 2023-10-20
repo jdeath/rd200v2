@@ -153,7 +153,7 @@ class RD200ConfigFlow(ConfigFlow, domain=DOMAIN):
                 discovery_info.advertisement.local_name.startswith("FR:RU")
                 or discovery_info.advertisement.local_name.startswith("FR:RE")
                 or discovery_info.advertisement.local_name.startswith("FR:GI")
-                or discovery_info.advertisement.local_name.startswith("FR:FB")
+                or discovery_info.advertisement.local_name.startswith("FR:HB")
                 or discovery_info.advertisement.local_name.startswith("FR:R2")
                 or discovery_info.advertisement.local_name.startswith("FR:HA")
                 or discovery_info.advertisement.local_name.startswith("FR:HC")
