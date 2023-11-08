@@ -34,6 +34,7 @@ Note: If used the ESPHome integration in the past, you must remove the RD200 MAC
 
 ### Pusle counter for V2 Devices (Thanks @farlight)
 Now - Actual count pulses (note that this is a real time parameter and it is updated on the device when the ion chamber fires, as we read the device every 10 minutes in HA it may not make sense. Users who want to use this parameter should consider changing DEFAULT_SCAN_INTERVAL in const.py to 1min (60) or almost 2min (120).
+
 Last - Last 10min pulse count until next radon value update.
 
 ### Version 2 Data locations:
