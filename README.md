@@ -38,6 +38,8 @@ Note: If used the ESPHome integration in the past, you must remove the RD200 MAC
 | `Current Radon` | `0x50` | `data[2:4]` | little endian ushort | Bq/m<sup>3</sup> | Yes |
 | `Average Day Radon` | `0x50` | `data[4:6]` | little endian ushort | Bq/m<sup>3</sup> | Yes |
 | `Average Month Radon` | `0x50` | `data[6:8]`  | little endian ushort | Bq/m<sup>3</sup> | Yes |
+| `Radon C pulse now` | `0x50` | `data[8:10]` | little endian ushort | Pulses | Yes |
+| `Radon C pulse last` | `0x50` | `data[10:12]` | little endian ushort | Pulses | Yes |
 | `Peak Radon` | `0x40` | `data[51:53]` | little endian ushort | Bq/m<sup>3<sup> | Yes |
 | `Serial` | `0x40` | `data[8:11] + data[2:8] + data[11:15]` | chars |  | No |  
 | `Model` | `0x40` | `data[16:21]` | chars |  | Yes |  

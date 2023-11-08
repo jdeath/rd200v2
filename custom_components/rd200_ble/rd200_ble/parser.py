@@ -25,7 +25,7 @@ class BleakCharacteristicMissing(BleakError):
 
 class BleakServiceMissing(BleakError):
     """Raised when a service is missing."""
-    
+
 from .const import (
     BQ_TO_PCI_MULTIPLIER,
 )
@@ -83,7 +83,7 @@ class RD200BluetoothDeviceData:
         if self._event is None:
             return
         self._event.set()
-    
+
     def disconnect_on_missing_services(func: WrapFuncType) -> WrapFuncType:
         """Define a wrapper to disconnect on missing services and characteristics.
 
@@ -108,7 +108,7 @@ class RD200BluetoothDeviceData:
                 raise
 
         return cast(WrapFuncType, _async_disconnect_on_missing_services_wrap)
-    
+
     @disconnect_on_missing_services
     async def _get_radon(self, client: BleakClient, device: RD200Device) -> RD200Device:
 
@@ -119,7 +119,7 @@ class RD200BluetoothDeviceData:
             )
         except:
             self.logger.warn("_get_radon Bleak error 1")
-            
+
         await client.write_gatt_char(RADON_CHARACTERISTIC_UUID_WRITE, WRITE_VALUE)
 
         # Wait for up to fice seconds to see if a
@@ -130,7 +130,7 @@ class RD200BluetoothDeviceData:
             self.logger.warn("Timeout getting command data.")
         except:
             self.logger.warn("_get_radon Bleak error 2")
-            
+
         await client.stop_notify(RADON_CHARACTERISTIC_UUID_READ)
 
         if self._command_data is not None and len(self._command_data) == 12:
@@ -138,7 +138,7 @@ class RD200BluetoothDeviceData:
             device.sensors["radon"] = round(float(RadonValueBQ),2)
             if not self.is_metric:
                 device.sensors["radon"] = round(float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER,2)
-   
+
             RadonValueBQ = struct.unpack("<H", self._command_data[4:6])[0]
             device.sensors["radon_1day_level"] = round(float(RadonValueBQ),2)
             if not self.is_metric:
@@ -151,11 +151,16 @@ class RD200BluetoothDeviceData:
                 device.sensors["radon_1month_level"] = (
                     round(float(RadonValueBQ) * BQ_TO_PCI_MULTIPLIER,2)
                 )
+            RadonValueBQ = struct.unpack("<H", self._command_data[8:10])[0]
+            device.sensors["radon_C_now"] = int(RadonValueBQ)
+            RadonValueBQ = struct.unpack("<H", self._command_data[10:12])[0]
+            device.sensors["radon_C_last"] = int(RadonValueBQ)
         else:
             device.sensors["radon"] = None
             device.sensors["radon_1day_level"] = None
             device.sensors["radon_1month_level"] = None
-
+            device.sensors["radon_C_now"] = None
+            device.sensors["radon_C_last"] = None
         self._command_data = None
         return device
 
@@ -171,7 +176,7 @@ class RD200BluetoothDeviceData:
             )
         except:
             self.logger.warn("_get_radon_uptime Bleak error 1")
-            
+
         await client.write_gatt_char(RADON_CHARACTERISTIC_UUID_WRITE, b"\x51")
 
         # Wait for up to fice seconds to see if a
@@ -182,7 +187,7 @@ class RD200BluetoothDeviceData:
             self.logger.warn("Timeout getting command data.")
         except:
             self.logger.warn("_get_radon_uptime Bleak error 2")
-            
+
         await client.stop_notify(RADON_CHARACTERISTIC_UUID_READ)
 
         if self._command_data is not None and len(self._command_data) == 16:
@@ -198,7 +203,7 @@ class RD200BluetoothDeviceData:
             mins = int (uptimeMinutes % 1440) % 60
             #sec = int(uptimeMillis / 1000)
             sec = 0
-            
+
             device.sensors["radon_uptime_string"] = (
                 str(day) + "d " + str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(sec).zfill(2)
             )
@@ -234,17 +239,17 @@ class RD200BluetoothDeviceData:
             device.sensors["radon"] = round(float(RadonValuePCI),2)
             if self.is_metric:
                 device.sensors["radon"] = round(float(RadonValuePCI) / BQ_TO_PCI_MULTIPLIER,2)
-            
+
             RadonValuePCI = struct.unpack("<f", self._command_data[6:10])[0]
             device.sensors["radon_1day_level"] = round(float(RadonValuePCI),2)
             if self.is_metric:
                 device.sensors["radon_1day_level"] = round(float(RadonValuePCI) / BQ_TO_PCI_MULTIPLIER,2)
-            
+
             RadonValuePCI = struct.unpack("<f", self._command_data[10:14])[0]
             device.sensors["radon_1month_level"] = round(float(RadonValuePCI),2)
             if self.is_metric:
                 device.sensors["radon_1month_level"] = round(float(RadonValuePCI) / BQ_TO_PCI_MULTIPLIER,2)
-                
+
         else:
             device.sensors["radon"] = None
             device.sensors["radon_1day_level"] = None
@@ -252,7 +257,7 @@ class RD200BluetoothDeviceData:
 
         self._command_data = None
         return device
-    
+
     async def _get_radon_peak_uptime_oldVersion(
         self, client: BleakClient, device: RD200Device
     ) -> RD200Device:
@@ -288,7 +293,7 @@ class RD200BluetoothDeviceData:
             hours = int (uptimeMinutes % 1440) // 60
             mins = int (uptimeMinutes % 1440) % 60
             sec = 0
-            
+
             device.sensors["radon_uptime_string"] = (
                 str(day) + "d " + str(hours).zfill(2) + ":" + str(mins).zfill(2) + ":" + str(sec).zfill(2)
             )
@@ -299,7 +304,7 @@ class RD200BluetoothDeviceData:
 
         self._command_data = None
         return device
-    
+
     @disconnect_on_missing_services
     async def _get_radon_peak(
         self, client: BleakClient, device: RD200Device
@@ -312,7 +317,7 @@ class RD200BluetoothDeviceData:
             )
         except:
             self.logger.warn("_get_radon_peak Bleak error 1")
-            
+
         await client.write_gatt_char(RADON_CHARACTERISTIC_UUID_WRITE, b"\x40")
 
         # Wait for up to one second to see if a
@@ -324,7 +329,7 @@ class RD200BluetoothDeviceData:
             self.logger.warn("Timeout getting command data.")
         except:
             self.logger.warn("_get_radon_peak Bleak error 2")
-            
+
         await client.stop_notify(RADON_CHARACTERISTIC_UUID_READ)
 
         if self._command_data is not None and len(self._command_data) == 68:
@@ -352,7 +357,7 @@ class RD200BluetoothDeviceData:
         device = RD200Device()
         device.name = ble_device.name
         device.address = ble_device.address
-            
+
         if ble_device.name.startswith("FR:R2"):
             device = await self._get_radon_oldVersion(client, device)
             device = await self._get_radon_peak_uptime_oldVersion(client, device)

@@ -32,7 +32,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .const import DOMAIN, VOLUME_BECQUEREL, VOLUME_PICOCURIE
+from .const import DOMAIN, VOLUME_BECQUEREL, VOLUME_PICOCURIE, COUNT_PULSES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +50,20 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
         name="Radon Peak",
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:radioactive",
+    ),
+    "radon_C_now": SensorEntityDescription(
+        key="radon_C_now",
+        native_unit_of_measurement=COUNT_PULSES,
+        name="Radon C pulse now",
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:radioactive-circle-outline",
+    ),
+    "radon_C_last": SensorEntityDescription(
+        key="radon_C_last",
+        native_unit_of_measurement=COUNT_PULSES,
+        name="Radon C pulse last",
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:radioactive-circle-outline",
     ),
     "radon_1day_level": SensorEntityDescription(
         key="radon_1day_level",
@@ -165,7 +179,7 @@ class RD200Sensor(CoordinatorEntity[DataUpdateCoordinator[RD200Device]], SensorE
                 )
             },
             name=name,
-            manufacturer="Ecosense",
+            manufacturer="FTLAB Co., LTD.",
             model="RD200",
             hw_version=rd200_device.hw_version,
             sw_version=rd200_device.sw_version,
