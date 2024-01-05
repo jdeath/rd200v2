@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from .rd200_ble import RD200BluetoothDeviceData
+from .rd200_ble import RD200BluetoothDeviceData, RD200Device
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.unit_system import METRIC_SYSTEM
+from bleak_retry_connector import close_stale_connections_by_address
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
@@ -29,13 +30,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     elevation = hass.config.elevation
     is_metric = hass.config.units is METRIC_SYSTEM
     assert address is not None
-
+    await close_stale_connections_by_address(address)
+    
     ble_device = bluetooth.async_ble_device_from_address(hass, address)
 
     if not ble_device:
         raise ConfigEntryNotReady(f"Could not find RD200 device with address {address}")
 
-    async def _async_update_method():
+    async def _async_update_method() -> RD200Device:
         """Get data from RD200 BLE."""
         ble_device = bluetooth.async_ble_device_from_address(hass, address)
         rd200 = RD200BluetoothDeviceData(_LOGGER, elevation, is_metric)
