@@ -13,7 +13,7 @@ A python script is posted for people to help find important fields in the V2.
 
 If use ESPHome BT proxy, update to at least ESPHome 2022.12.4 to allow Version 2 radon peak value to work correctly.
 
-If updated to Home Assistant 2024.1.0, please run at least version 4.1 of the integration as previous releases will error. Home Assistant made changes and did not provide any depreciation time buffer.
+If updated to Home Assistant 2024.1.0, please run at least version 4.1 of the integration as previous releases will error. Home Assistant made changes and did not provide any depreciation time buffer. https://github.com/home-assistant/core/issues/107004
 
 If use a Raspberry Pi built-in BT adapter, the Peak and Uptime sensor may not work after the first update and cause itegration to hang. Being investigated. Two options to work around: Use an ESPHome proxy (recommended) or comment out (add a #) to line 257 and 258 of the parser.py, like so:
 ```
