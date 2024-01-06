@@ -40,6 +40,9 @@
     },
 	{
       "local_name": "FR:GJ*"
+    },
+	{
+      "local_name": "FR:HJ*"
     }
   ],
   "codeowners": ["@jdeath"],	
