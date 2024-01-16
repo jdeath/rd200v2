@@ -15,6 +15,8 @@ If use ESPHome BT proxy, update to at least ESPHome 2022.12.4 to allow Version 2
 
 If updated to Home Assistant 2024.1.0, please run at least version 4.1 of the integration as previous releases will error. Home Assistant made changes and did not provide any depreciation time buffer. https://github.com/home-assistant/core/issues/107004
 
+If you update to 4.2, you must run 2024.1.0. If you get an error about "close_stale_connections_by_address" you need to update to homeassistant 2024.1.x or revert back to version 4.1 of this integration
+
 If use a Raspberry Pi built-in BT adapter, the Peak and Uptime sensor may not work after the first update and cause itegration to hang. Being investigated. Two options to work around: Use an ESPHome proxy (recommended) or comment out (add a #) to line 257 and 258 of the parser.py, like so:
 ```
  #device = await self._get_radon_peak(client, device)
