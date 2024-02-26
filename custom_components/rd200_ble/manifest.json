@@ -5,50 +5,53 @@
     {
       "local_name": "FR:RU*"
     },
-	{
+    {
       "local_name": "FR:RE*"
     },
-	{
+    {
       "local_name": "FR:GI*"
     },
-	{
+    {
       "local_name": "FR:HB*"
     },
-	  {
+    {
       "local_name": "FR:HF*"
     },
-	  {
+    {
       "local_name": "FR:HE*"
     },
-	{
+    {
       "local_name": "FR:HJ*"
     },
-	{
+    {
       "local_name": "FR:HK*"
     },
-	{
+    {
+      "local_name": "FR:HL*"
+    },
+    {
       "local_name": "FR:R2*"
     },
-	{
+    {
       "local_name": "FR:HA*"
     },
-	{
+    {
       "local_name": "FR:HC*"
     },
-  {
+    {
       "local_name": "FR:HD*"
     },
-	{
+    {
       "local_name": "FR:RD*"
     },
-	{
+    {
       "local_name": "FR:GL*"
     },
-	{
+    {
       "local_name": "FR:GJ*"
     }
   ],
-  "codeowners": ["@jdeath"],	
+  "codeowners": ["@jdeath"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.github.com/jdeath/rd200v2",
