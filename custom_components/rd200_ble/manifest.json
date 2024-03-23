@@ -54,7 +54,7 @@
       "local_name": "FR:GJ*"
     },
     {
-      "local_name": "FR:IA*"
+      "local_name": "FR:I*"
     }
   ],
   "codeowners": ["@jdeath"],
