@@ -1,7 +1,8 @@
 # rd200v2
 RadonEye RD200 (Version 2 and now Version 1) Integration for Homeasssistant. Throw me a github star if you use this!
 
-[![Stargazers repo roster for @jdeath/rd200v2](https://git-lister.onrender.com/api/stars/jdeath/rd200v2?limit=20)](https://github.com/jdeath/rd200v2/stargazers)
+[![GitHub Repo stars](https://img.shields.io/github/stars/jdeath/rd200v2)](https://github.com/jdeath/rd200v2/stargazers)
+
 
 Based on: https://github.com/EtoTen/radonreader/ and the AirThings BLE Homeassistant Integration (https://github.com/home-assistant/core/tree/dev/homeassistant/components/airthings_ble) and https://github.com/vincegio/airthings-ble, and the ESPHome Native Integration (https://esphome.io/components/sensor/radon_eye_ble.html)
 
