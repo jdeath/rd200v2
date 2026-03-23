@@ -9,13 +9,16 @@ from collections import namedtuple
 from datetime import datetime
 import logging
 
+from functools import partial
 # from logging import Logger
 from math import exp
 from typing import Any, Callable, Tuple, TypeVar, cast
 
+from async_interrupt import interrupt
 from bleak import BleakClient, BleakError
 from bleak.backends.device import BLEDevice
-from bleak_retry_connector import establish_connection
+from bleak.backends.service import BleakGATTService
+from bleak_retry_connector import establish_connection, BleakClientWithServiceCache
 
 WrapFuncType = TypeVar("WrapFuncType", bound=Callable[..., Any])
 
@@ -26,8 +29,15 @@ class BleakCharacteristicMissing(BleakError):
 class BleakServiceMissing(BleakError):
     """Raised when a service is missing."""
 
+class DisconnectedError(Exception):
+    """Disconnected from device."""
+
+class UnsupportedDeviceError(Exception):
+    """Unsupported device."""
+    
 from .const import (
     BQ_TO_PCI_MULTIPLIER,
+    UPDATE_TIMEOUT,
 )
 
 RADON_CHARACTERISTIC_UUID_READ = "00001525-0000-1000-8000-00805f9b34fb"
@@ -119,15 +129,22 @@ class RD200BluetoothDeviceData:
             )
         except:
             self.logger.warn("_get_radon Bleak error 1")
-
+            device.sensors["radon"] = None
+            device.sensors["radon_1day_level"] = None
+            device.sensors["radon_1month_level"] = None
+            device.sensors["radon_C_now"] = None
+            device.sensors["radon_C_last"] = None
+            self._command_data = None
+            return device
+        
         await client.write_gatt_char(RADON_CHARACTERISTIC_UUID_WRITE, WRITE_VALUE)
 
-        # Wait for up to fice seconds to see if a
+        # Wait for up to five seconds to see if a
         # callback comes in.
         try:
-            await asyncio.wait_for(self._event.wait(), 10)
+            await asyncio.wait_for(self._event.wait(), 15)
         except asyncio.TimeoutError:
-            self.logger.warn("Timeout getting command data.")
+            self.logger.warn("_get_radon Timeout getting command data.")
         except:
             self.logger.warn("_get_radon Bleak error 2")
 
@@ -156,11 +173,13 @@ class RD200BluetoothDeviceData:
             RadonValueBQ = struct.unpack("<H", self._command_data[10:12])[0]
             device.sensors["radon_C_last"] = int(RadonValueBQ)
         else:
+            self.logger.warn("_get_radon Data None")
             device.sensors["radon"] = None
             device.sensors["radon_1day_level"] = None
             device.sensors["radon_1month_level"] = None
             device.sensors["radon_C_now"] = None
             device.sensors["radon_C_last"] = None
+            
         self._command_data = None
         return device
 
@@ -184,7 +203,7 @@ class RD200BluetoothDeviceData:
         try:
             await asyncio.wait_for(self._event.wait(), 5)
         except asyncio.TimeoutError:
-            self.logger.warn("Timeout getting command data.")
+            self.logger.warn("_get_radon_uptime Timeout getting command data.")
         except:
             self.logger.warn("_get_radon_uptime Bleak error 2")
 
@@ -326,7 +345,7 @@ class RD200BluetoothDeviceData:
         try:
             await asyncio.wait_for(self._event.wait(), 5)
         except asyncio.TimeoutError:
-            self.logger.warn("Timeout getting command data.")
+            self.logger.warn("_get_radon_peak Timeout getting command data.")
         except:
             self.logger.warn("_get_radon_peak Bleak error 2")
 
@@ -350,22 +369,60 @@ class RD200BluetoothDeviceData:
         self._command_data = None
         return device
 
+    def _handle_disconnect(
+        self, disconnect_future: asyncio.Future[bool], client: BleakClient
+    ) -> None:
+        """Handle disconnect from device."""
+        self.logger.debug("Disconnected from %s", client.address)
+        if not disconnect_future.done():
+            disconnect_future.set_result(True)
+            
     async def update_device(self, ble_device: BLEDevice) -> RD200Device:
         """Connects to the device through BLE and retrieves relevant data"""
-
-        client = await establish_connection(BleakClient, ble_device, ble_device.address)
         device = RD200Device()
         device.name = ble_device.name
         device.address = ble_device.address
+        
+        loop = asyncio.get_running_loop()
+        disconnect_future = loop.create_future()
+        client: BleakClientWithServiceCache = (
+            await establish_connection(  # pylint: disable=line-too-long
+                BleakClientWithServiceCache,
+                ble_device,
+                ble_device.address,
+                disconnected_callback=partial(
+                    self._handle_disconnect, disconnect_future
+                ),
+            )
+        )
+        try:
+            async with (
+                interrupt(
+                    disconnect_future,
+                    DisconnectedError,
+                    f"Disconnected from {client.address}",
+                ),
+                asyncio.timeout(UPDATE_TIMEOUT),
+            ):
 
-        if ble_device.name.startswith("FR:R2"):
-            device = await self._get_radon_oldVersion(client, device)
-            device = await self._get_radon_peak_uptime_oldVersion(client, device)
-        else:
-            device = await self._get_radon(client, device)
-            device = await self._get_radon_peak(client, device)
-            device = await self._get_radon_uptime(client, device)
+                if ble_device.name.startswith("FR:R2"):
+                    device = await self._get_radon_oldVersion(client, device)
+                    device = await self._get_radon_peak_uptime_oldVersion(client, device)
+                else:
+                    device = await self._get_radon(client, device)
+                    device = await self._get_radon_peak(client, device)
+                    device = await self._get_radon_uptime(client, device)
 
-        await client.disconnect()
+        except BleakError as err:
+            if "not found" in str(err):  # In future bleak this is a named exception
+                # Clear the char cache since a char is likely
+                # missing from the cache
+                await client.clear_cache()
+            raise
+        except UnsupportedDeviceError:
+            await client.disconnect()
+            raise
+        finally:
+            await client.disconnect()
 
         return device
