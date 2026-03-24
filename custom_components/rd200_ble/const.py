@@ -1,4 +1,9 @@
-"""Constants for RD200 BLE parser"""
+"""Constants for RD200 BLE."""
 
-BQ_TO_PCI_MULTIPLIER = 0.027
-UPDATE_TIMEOUT = 15
+DOMAIN = "rd200_ble"
+
+VOLUME_BECQUEREL = "Bq/m³"
+VOLUME_PICOCURIE = "pCi/L"
+COUNT_PULSES = "Pulses"
+
+DEFAULT_SCAN_INTERVAL = 600
