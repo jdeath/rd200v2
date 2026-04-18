@@ -26,6 +26,18 @@ An issue has been created in homeassistant for the BT performance, but it could 
 
 For VMWare: A user solved "regularly loosing-connection" on their Win10/Nuc running Home-Assistant in a VMWare Virtual machine by updating from VMware Pro 15 to VMWare (free) Verions 16. 
 
+### Device discovered but integration won't set up
+
+If Home Assistant's Bluetooth integration sees your RD200 in scanner diagnostics (correct `FR:*` local name, healthy RSSI from a connectable proxy) but no "Discovered" card ever appears in Settings -> Devices & Services, check whether the **Ecosense mobile app** is actively connected to the device on any phone in Bluetooth range.
+
+The Ecosense app holds an exclusive GATT connection to the RD200 while open. While that connection is alive:
+- The device may still advertise, but HA cannot connect to it to run the config flow.
+- HA's discovery dispatch silently waits for the device to become connectable, leaving no visible error -- the matcher appears not to fire when it's actually blocked on connectability.
+
+Fix: force-close the Ecosense app on every phone in range (not just backgrounded -- Android and iOS can hold BLE connections in the background). Rebooting the phone guarantees release. Within a few minutes, HA's Discovered card should appear.
+
+This can also cause readings to stop updating after setup if the Ecosense app has been used recently; the phone may still be holding the connection.
+
 ### Installation Instructions
 - Add this repo into HACS
 - Install integration
