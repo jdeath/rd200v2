@@ -14,5 +14,6 @@
                 "description": "\u0538\u0576\u057f\u0580\u0565\u0584 \u057d\u0561\u0580\u0584\u0568 \u056f\u0561\u0580\u0563\u0561\u057e\u0578\u0580\u0565\u056c\u0578\u0582 \u0570\u0561\u0574\u0561\u0580"
             }
         }
-    }
+    },
+    "options": {"step": {"init": {"data": {"keep_last_valid_value": "Keep last valid value on read error", "max_cache_age_hours": "Maximum age of cached values (hours, 0 = unlimited)"}}}}
 }

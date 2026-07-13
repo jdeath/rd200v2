@@ -19,5 +19,6 @@
                 "description": "\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3059\u308b\u30c7\u30d0\u30a4\u30b9\u3092\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044"
             }
         }
-    }
+    },
+    "options": {"step": {"init": {"data": {"keep_last_valid_value": "Keep last valid value on read error", "max_cache_age_hours": "Maximum age of cached values (hours, 0 = unlimited)"}}}}
 }
