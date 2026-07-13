@@ -197,3 +197,11 @@ class RD200Sensor(CoordinatorEntity[DataUpdateCoordinator[RD200Device]], SensorE
             return self.coordinator.data.sensors[self.entity_description.key]
         except KeyError:
             return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str] | None:
+        """Return the time at which a valid device value was last received."""
+        last_valid_update = self.coordinator.data.last_valid_update
+        if last_valid_update is None:
+            return None
+        return {"last_valid_update": last_valid_update}
