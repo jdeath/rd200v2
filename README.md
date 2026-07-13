@@ -48,6 +48,12 @@ This can also cause readings to stop updating after setup if the Ecosense app ha
 
 Note: If used the ESPHome integration in the past, you must remove the RD200 MAC address from the `ble_client:` section. 
 
+### Retain values during Bluetooth errors
+
+The integration normally marks sensors unavailable when it cannot read the device. To retain the most recently valid measurements during temporary Bluetooth failures, open the integration's **Configure** dialog and enable **Keep last valid value on read error**.
+
+The setting is disabled by default. Valid readings are stored persistently, so they can also be restored after a Home Assistant restart while the device is temporarily unreachable. Every sensor exposes `last_valid_update` as an attribute. Optionally set a maximum cache age in hours; `0` keeps cached values indefinitely, while an expired cache is reported as `unknown`.
+
 ### Pusle counter for V2 Devices (Thanks @farlight1)
 Now - Actual count pulses (note that this is a real time parameter and it is updated on the device when the ion chamber fires, as we read the device every 10 minutes in HA it may not make sense. Users who want to use this parameter should consider changing DEFAULT_SCAN_INTERVAL in const.py to 1min (60) or almost 2min (120).
 
