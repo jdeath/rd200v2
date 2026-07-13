@@ -18,5 +18,6 @@
                 "description": "\u9009\u62e9\u4e00\u4e2a\u8bbe\u5907\u4ee5\u914d\u7f6e"
             }
         }
-    }
+    },
+    "options": {"step": {"init": {"data": {"keep_last_valid_value": "Keep last valid value on read error", "max_cache_age_hours": "Maximum age of cached values (hours, 0 = unlimited)"}}}}
 }

@@ -19,5 +19,15 @@
                 "description": "W\u00e4hle ein Ger\u00e4t zum Einrichten aus"
             }
         }
+    },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "keep_last_valid_value": "Letzten g\u00fcltigen Wert bei Lesefehler beibehalten",
+          "max_cache_age_hours": "Maximales Alter zwischengespeicherter Werte (Stunden, 0 = unbegrenzt)"
+        }
+      }
     }
+  }
 }
