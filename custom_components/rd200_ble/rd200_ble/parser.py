@@ -58,6 +58,7 @@ class RD200Device:
     name: str = ""
     identifier: str = ""
     address: str = ""
+    last_valid_update: str | None = None
     sensors: dict[str, str | float | None] = dataclasses.field(
         default_factory=lambda: {}
     )
