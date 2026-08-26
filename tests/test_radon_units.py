@@ -36,7 +36,7 @@ async def hass(tmp_path):
     await instance.async_stop()
 
 
-async def make_sensors(hass, units):
+async def make_sensors(hass, units, stale_keys=RADON_KEYS):
     """Run the integration's sensor setup with readings in its native units."""
     hass.config.units = units
     coordinator = DataUpdateCoordinator(hass, LOGGER, name=DOMAIN, config_entry=None)
@@ -53,6 +53,7 @@ async def make_sensors(hass, units):
             "radon_uptime_string": "0d 01:00:00",
         },
         last_valid_update="2026-09-11T12:00:00+00:00",
+        stale_keys=list(stale_keys),
     )
     hass.data[DOMAIN] = {"test": coordinator}
     sensors = []
@@ -187,3 +188,23 @@ def test_import_without_radon_device_class(monkeypatch):
             )
     finally:
         importlib.reload(sensor_module)
+
+
+@pytest.mark.asyncio
+async def test_last_valid_update_only_on_held_over_sensors(hass):
+    """Only sensors serving a held-over value carry last_valid_update."""
+    sensors, _ = await make_sensors(hass, METRIC_SYSTEM, stale_keys=["radon"])
+    assert sensors["radon"].extra_state_attributes == {
+        "last_valid_update": "2026-09-11T12:00:00+00:00"
+    }
+    for key, entity in sensors.items():
+        if key != "radon":
+            assert entity.extra_state_attributes is None, key
+
+
+@pytest.mark.asyncio
+async def test_no_attribute_when_all_readings_are_fresh(hass):
+    """A fully successful poll adds no attribute, so it causes no recorder churn."""
+    sensors, _ = await make_sensors(hass, METRIC_SYSTEM, stale_keys=[])
+    for key, entity in sensors.items():
+        assert entity.extra_state_attributes is None, key

@@ -59,6 +59,9 @@ class RD200Device:
     identifier: str = ""
     address: str = ""
     last_valid_update: str | None = None
+    # Sensor keys currently serving a cached (held-over) reading. Runtime-only:
+    # deliberately not persisted, so the stored cache format is unchanged.
+    stale_keys: list[str] = dataclasses.field(default_factory=list)
     sensors: dict[str, str | float | None] = dataclasses.field(
         default_factory=lambda: {}
     )
