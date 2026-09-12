@@ -48,6 +48,24 @@ This can also cause readings to stop updating after setup if the Ecosense app ha
 
 Note: If used the ESPHome integration in the past, you must remove the RD200 MAC address from the `ble_client:` section. 
 
+### Radon units
+
+On Home Assistant 2026.8 or later, you can choose `Bq/m³` or `pCi/L` independently
+for each radon concentration entity. Open **Settings → Devices & services →
+Entities**, select the Radon, Radon Peak, Radon 1-day Level, or Radon 1-month Level
+entity, open its settings (gear icon), and change **Unit of measurement**.
+For example, keep Home Assistant's system units set to metric and select `pCi/L`
+for your radon entities. Home Assistant converts the readings automatically.
+
+Existing entities retain their entity IDs, and Home Assistant preserves their
+previous units when enabling native conversion. New entities default to the
+system's preferred units. Explicit per-entity unit choices take precedence over
+the system default. Older Home Assistant versions retain the integration's
+existing system-based unit selection without per-entity conversion controls.
+
+If you change an entity's unit, update any numeric thresholds or templates that
+use its state to match the new unit (`1 pCi/L = 37 Bq/m³`).
+
 ### Retain values during Bluetooth errors
 
 The integration normally marks sensors unavailable when it cannot read the device. To retain the most recently valid measurements during temporary Bluetooth failures, open the integration's **Configure** dialog and enable **Keep last valid value on read error**.

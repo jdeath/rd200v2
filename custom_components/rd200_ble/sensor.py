@@ -35,9 +35,14 @@ from .const import DOMAIN, VOLUME_BECQUEREL, VOLUME_PICOCURIE, COUNT_PULSES
 
 _LOGGER = logging.getLogger(__name__)
 
+# Native radon unit conversion is available starting with Home Assistant 2026.8.
+# Keep the existing behavior on older versions supported by this integration.
+RADON_DEVICE_CLASS = getattr(SensorDeviceClass, "RADON", None)
+
 SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     "radon": SensorEntityDescription(
         key="radon",
+        device_class=RADON_DEVICE_CLASS,
         native_unit_of_measurement=VOLUME_BECQUEREL,
         name="Radon",
         state_class=SensorStateClass.MEASUREMENT,
@@ -45,6 +50,7 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     ),
     "radon_peak": SensorEntityDescription(
         key="radon_peak",
+        device_class=RADON_DEVICE_CLASS,
         native_unit_of_measurement=VOLUME_BECQUEREL,
         name="Radon Peak",
         state_class=SensorStateClass.MEASUREMENT,
@@ -66,6 +72,7 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     ),
     "radon_1day_level": SensorEntityDescription(
         key="radon_1day_level",
+        device_class=RADON_DEVICE_CLASS,
         native_unit_of_measurement=VOLUME_BECQUEREL,
         name="Radon 1-day Level",
         state_class=SensorStateClass.MEASUREMENT,
@@ -73,6 +80,7 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     ),
     "radon_1month_level": SensorEntityDescription(
         key="radon_1month_level",
+        device_class=RADON_DEVICE_CLASS,
         native_unit_of_measurement=VOLUME_BECQUEREL,
         name="Radon 1-month Level",
         state_class=SensorStateClass.MEASUREMENT,
