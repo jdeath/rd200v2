@@ -1,0 +1,8 @@
+# Install alongside the Home Assistant version under test (see tests.yml).
+pytest==9.1.1
+pytest-asyncio==1.4.0
+bleak-retry-connector==4.7.0
+aiousbwatcher==1.1.2
+aiohasupervisor==0.6.0
+serialx==1.10.0
+aioesphomeapi==46.4.1

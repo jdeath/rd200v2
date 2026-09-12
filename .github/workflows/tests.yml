@@ -1,0 +1,25 @@
+name: Test radon units
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        homeassistant: ["2026.7.3", "2026.9.2"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Install test dependencies
+        run: python -m pip install "homeassistant==${{ matrix.homeassistant }}" -r tests/requirements.txt
+      - name: Test native conversion and legacy compatibility
+        run: python -m pytest -q tests/test_radon_units.py
