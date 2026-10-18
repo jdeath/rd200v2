@@ -391,11 +391,18 @@ class RD200BluetoothDeviceData:
                 BleakClientWithServiceCache,
                 ble_device,
                 ble_device.address,
-                disconnected_callback=partial(
-                    self._handle_disconnect, disconnect_future
+                # Look up disconnect_future when called, so it can be replaced below
+                disconnected_callback=lambda client: self._handle_disconnect(
+                    disconnect_future, client
                 ),
             )
         )
+        # establish_connection may retry internally (e.g. BlueZ
+        # le-connection-abort-by-local), which fires the disconnect callback
+        # before we are connected. Discard that stale result so interrupt()
+        # does not abort the first GATT command of a healthy connection.
+        if disconnect_future.done() and client.is_connected:
+            disconnect_future = loop.create_future()
         try:
             async with (
                 interrupt(
