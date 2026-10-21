@@ -206,8 +206,17 @@ class RD200Sensor(CoordinatorEntity[DataUpdateCoordinator[RD200Device]], SensorE
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
-        """Return the time at which a valid device value was last received."""
-        last_valid_update = self.coordinator.data.last_valid_update
-        if last_valid_update is None:
+        """Expose cache provenance only while this sensor is serving a held-over value.
+
+        Attributes are written to the recorder on every state change, so an
+        always-present timestamp that advances each poll would force a database
+        row per sensor per update even when the reading has not moved. Emitting
+        the attribute only for stale sensors keeps healthy polls free of
+        attribute churn and marks held-over samples explicitly in history.
+        """
+        data = self.coordinator.data
+        if self.entity_description.key not in data.stale_keys:
             return None
-        return {"last_valid_update": last_valid_update}
+        if data.last_valid_update is None:
+            return None
+        return {"last_valid_update": data.last_valid_update}

@@ -71,6 +71,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.warning("Ignoring invalid cached data for %s", address)
             return None
 
+    def _stale_cached_device(cached_device: RD200Device) -> RD200Device:
+        """Mark every sensor as serving a held-over value."""
+        return dataclasses.replace(
+            cached_device, stale_keys=list(cached_device.sensors)
+        )
+
     def _unknown_cached_device(cached_device: RD200Device) -> RD200Device:
         return dataclasses.replace(
             cached_device,
@@ -101,7 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     _LOGGER.warning("Cached data for %s has expired", address)
                     return _unknown_cached_device(cached_device)
                 _LOGGER.warning("Using cached data for %s after update error: %s", address, err)
-                return cached_device
+                return _stale_cached_device(cached_device)
             raise UpdateFailed(f"Unable to fetch data: {err}") from err
 
         valid_sensors = {
@@ -113,12 +119,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 if _cache_expired():
                     return _unknown_cached_device(cached_device)
                 _LOGGER.warning("Using cached data for %s after an empty update", address)
-                return cached_device
+                return _stale_cached_device(cached_device)
             return data
 
         cached_device = _cached_device()
         merged_sensors = cached_device.sensors.copy() if cached_device else {}
         merged_sensors.update(valid_sensors)
+        stale_keys = [key for key in merged_sensors if key not in valid_sensors]
         cached_data = dataclasses.asdict(
             dataclasses.replace(
                 data,
@@ -133,10 +140,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 sensors=merged_sensors,
             )
         )
+        # stale_keys describes this cycle only; keep it out of the stored payload
+        # so the on-disk cache format is unchanged and remains readable by
+        # earlier versions.
+        cached_data.pop("stale_keys", None)
         await store.async_save(cached_data)
 
         if _cache_enabled():
-            return RD200Device(**cached_data)
+            return RD200Device(**cached_data, stale_keys=stale_keys)
         return data
 
     coordinator = DataUpdateCoordinator(
