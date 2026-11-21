@@ -7,6 +7,8 @@ Based on: https://github.com/EtoTen/radonreader/ and the AirThings BLE Homeassis
 
 Works for RD200 Version 2 units with serial numbers starting with either FR:RU (United States) , FR:RE (Spain), FR:GI, FR:H, FR:GL, FR:I, FR:J (??? all sold in the US), FR:RD, FR:GJ, and FR:KA. Now works for version 1 (FR:R2 serial numbers). V1 integration currently only supports current radon value, 1 day and 1 month readings, peak and uptime. Note the box and the device display do not show the "FR:" portion of the serial number.
 
+Also works for the **RadonEye Plus2 (RD200P2, FR:P serial numbers)** over Bluetooth: current radon, 1 day and 1 month averages, peak, pulse counters and uptime. See [Plus2 data locations](#plus2-rd200p2-data-locations) below. Temperature and humidity are not read yet.
+
 If you are pretty sure it is a version 2 device, but has a differnet serial number prefix, edit the manifest.json and line 152 in config_flow.py to include you prefix. If it works, post an issue or a PR and I can add it in.
 
 A python script is posted for people to help find important fields in the V2.
@@ -91,3 +93,22 @@ Last - Last 10min pulse count until next radon value update.
 | `Firmware` | `0x40` | `data[22:30]` | chars |  | Yes |  
 | `Uptime Minutes Field` | `0x51` | `data[4:8]` | little endian uint | minutes  | Yes |  
 | `Uptime seconds Field` | `??` | `??` | little endian ushort | ??  | no: hard coded to 0 | 
+
+### Plus2 (RD200P2) data locations:
+The Plus2 uses the Version 1 service and characteristic UUIDs (`00001523-1212-efde-1523-785feabcd123`, write `...1524...`, notify `...1525...`), but its replies hold little-endian integers in Bq/m<sup>3</sup>. Verified on one device; "assumed" rows match the Version 2 layout but have not been compared with the RadonEye app yet.
+
+| Reading | Write Value | Data Location | Data Format | Unit | Status |
+| - | - | - | - | - | - |
+| `Current Radon` | `0x50` | `data[2:4]` | little endian ushort | Bq/m<sup>3</sup> | Matches app "Real-time" |
+| `Average Day Radon` | `0x50` | `data[4:6]` | little endian ushort | Bq/m<sup>3</sup> | Assumed |
+| `Average Month Radon` | `0x50` | `data[6:8]` | little endian ushort | Bq/m<sup>3</sup> | Assumed |
+| `Average 7 Day Radon` | `0x50` | `data[8:10]` | little endian ushort | Bq/m<sup>3</sup> | Matches app "7day Average" (not exposed as a sensor yet) |
+| `Peak Radon` | `0x50` | `data[10:12]` | little endian ushort | Bq/m<sup>3</sup> | Assumed |
+| `Unknown` | `0x50` | `data[12:14]` | little endian ushort | ? | |
+| `Radon C pulse now` | `0x50` | `data[14:16]` | little endian ushort | Pulses | Assumed |
+| `Radon C pulse last` | `0x50` | `data[16:18]` | little endian ushort | Pulses | Assumed |
+| `Device clock` | `0x50` | `data[18:20]` | mm, ss | | |
+| `Uptime Minutes Field` | `0x51` | `data[4:8]` | little endian uint | minutes | Matches app "Meas. Time" |
+| `Device clock` | `0x51` | `data[14:20]` | yy, mm, dd, hh, mm, ss | | |
+
+The Plus2 does not answer the Version 1 status commands `0x10`, `0xA6`, `0xAF` and `0xE8`, nor the Version 2 command `0x40`.

@@ -34,6 +34,9 @@
     },
     {
       "local_name": "FR:K*"
+    },
+    {
+      "local_name": "FR:P*"
     }
   ],
   "codeowners": [
