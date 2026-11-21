@@ -46,7 +46,49 @@ RADON_CHARACTERISTIC_UUID_READ_OLDVERSION = "00001525-1212-efde-1523-785feabcd12
 RADON_CHARACTERISTIC_UUID_WRITE_OLDVERSION = "00001524-1212-efde-1523-785feabcd123"
 WRITE_VALUE = b"\x50"
 
+# RadonEye Plus2 (RD200P2): advertises as "FR:P...", uses the V1 service and
+# characteristic UUIDs, but answers 0x50/0x51 with little-endian integers
+# (Bq/m3) instead of the V1 floats (pCi/L).
+PLUS2_NAME_PREFIX = "FR:P"
+
 _LOGGER = logging.getLogger(__name__)
+
+
+def parse_plus2_measurement(data: bytes | bytearray) -> dict[str, int] | None:
+    """Decode a RadonEye Plus2 reply to command 0x50.
+
+    Layout (20 bytes): 0x50, 0x10, then eight little-endian uint16 values and
+    two bytes of the device clock (mm, ss). Values are in Bq/m3, except the
+    two pulse counters.
+    """
+    if data is None or len(data) < 18 or data[0] != 0x50:
+        return None
+    (
+        now,
+        day,
+        month,
+        week,
+        peak,
+        _unknown,
+        pulse_now,
+        pulse_last,
+    ) = struct.unpack("<8H", data[2:18])
+    return {
+        "radon": now,
+        "radon_1day_level": day,
+        "radon_1month_level": month,
+        "radon_7day_level": week,
+        "radon_peak": peak,
+        "radon_C_now": pulse_now,
+        "radon_C_last": pulse_last,
+    }
+
+
+def parse_plus2_uptime_minutes(data: bytes | bytearray) -> int | None:
+    """Decode the measuring time (minutes) from a RadonEye Plus2 reply to 0x51."""
+    if data is None or len(data) < 8 or data[0] != 0x51:
+        return None
+    return struct.unpack("<I", data[4:8])[0]
 
 
 @dataclasses.dataclass
@@ -373,6 +415,60 @@ class RD200BluetoothDeviceData:
         self._command_data = None
         return device
 
+    async def _plus2_command(
+        self, client: BleakClient, command: bytes
+    ) -> bytearray | None:
+        """Send one command to a Plus2 and return its notification, if any."""
+        self._event = asyncio.Event()
+        self._command_data = None
+        await client.start_notify(
+            RADON_CHARACTERISTIC_UUID_READ_OLDVERSION, self.notification_handler
+        )
+        await client.write_gatt_char(RADON_CHARACTERISTIC_UUID_WRITE_OLDVERSION, command)
+        try:
+            await asyncio.wait_for(self._event.wait(), 5)
+        except asyncio.TimeoutError:
+            self.logger.warning("Plus2: timeout waiting for reply to 0x%s", command.hex())
+        await client.stop_notify(RADON_CHARACTERISTIC_UUID_READ_OLDVERSION)
+        data, self._command_data = self._command_data, None
+        return data
+
+    async def _get_radon_plus2(
+        self, client: BleakClient, device: RD200Device
+    ) -> RD200Device:
+        """Read a RadonEye Plus2 (RD200P2)."""
+        data = await self._plus2_command(client, WRITE_VALUE)
+        values = parse_plus2_measurement(data)
+        radon_keys = ("radon", "radon_1day_level", "radon_1month_level", "radon_peak")
+        if values is None:
+            self.logger.warning(
+                "Plus2: unexpected reply to 0x50: %s", data.hex() if data else None
+            )
+            for key in (*radon_keys, "radon_C_now", "radon_C_last"):
+                device.sensors[key] = None
+        else:
+            for key in radon_keys:
+                bq = float(values[key])
+                device.sensors[key] = (
+                    round(bq, 2) if self.is_metric
+                    else round(bq * BQ_TO_PCI_MULTIPLIER, 2)
+                )
+            device.sensors["radon_C_now"] = values["radon_C_now"]
+            device.sensors["radon_C_last"] = values["radon_C_last"]
+
+        minutes = parse_plus2_uptime_minutes(await self._plus2_command(client, b"\x51"))
+        if minutes is None:
+            device.sensors["radon_uptime"] = None
+            device.sensors["radon_uptime_string"] = None
+        else:
+            device.sensors["radon_uptime"] = minutes * 60
+            device.sensors["radon_uptime_string"] = (
+                f"{minutes // 1440}d {(minutes % 1440) // 60:02d}:{minutes % 60:02d}:00"
+            )
+
+        device.hw_version = "RD200P2"
+        return device
+
     def _handle_disconnect(
         self, disconnect_future: asyncio.Future[bool], client: BleakClient
     ) -> None:
@@ -416,7 +512,9 @@ class RD200BluetoothDeviceData:
                 asyncio.timeout(UPDATE_TIMEOUT),
             ):
 
-                if ble_device.name.startswith("FR:R2"):
+                if ble_device.name.startswith(PLUS2_NAME_PREFIX):
+                    device = await self._get_radon_plus2(client, device)
+                elif ble_device.name.startswith("FR:R2"):
                     device = await self._get_radon_oldVersion(client, device)
                     device = await self._get_radon_peak_uptime_oldVersion(client, device)
                 else:
